@@ -6,26 +6,31 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
 @Getter
 @Entity
-@Table(name = "users", indexes = {@Index(name = "idx_login", columnList = "login")})
+@Table(name = "users", indexes = {@Index(name = "idx_username", columnList = "username")})
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column(unique = true, nullable = false)
-    private String login;
+    private String username;
 
 
     @Column(nullable = false)
     private String password;
 
-    public User(String login, String password) {
-        this.login = login;
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    public User(String username, String password, Role role) {
+        this.username = username;
         this.password = password;
+        this.role = role;
     }
 }
