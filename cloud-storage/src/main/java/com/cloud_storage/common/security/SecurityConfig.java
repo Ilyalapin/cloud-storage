@@ -23,18 +23,18 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/image/**").permitAll()
-                        .requestMatchers("/home", "/login","/registration").permitAll()
+                        .requestMatchers("/home", "/sign-in","/sign-up").permitAll()
                         .requestMatchers("/admin/**").hasRole(ADMIN.getAuthority())
                         .requestMatchers(antMatcher("/user-page/{\\d}/delete")).hasAnyAuthority(ADMIN.getAuthority(), USER.getAuthority())
                         .anyRequest().authenticated())
                 .formLogin(login -> login
-                        .loginPage("/login")
+                        .loginPage("/sign-in")
                         .defaultSuccessUrl("/user-page",true)
-                        .failureUrl("/login?error=true")
+                        .failureUrl("/sign-in?error=true")
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/sign-out")
-                        .logoutSuccessUrl("/home")  //TODO Это урл,на который мы редиректнемся при успешном выходе из аккаунта
+                        .logoutSuccessUrl("/home")
                         .deleteCookies("JSESSIONID")
                 );
         return http.build();

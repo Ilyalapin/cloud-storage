@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/registration")
-public class RegistrationController {
+@RequestMapping("/sign-up")
+public class SignUpController {
     private final UserService userService;
 
 
     @GetMapping
-    public String registrationPage() {
-        return "registration";
+    public String signUpPage() {
+        return "sign-up";
     }
 
 
@@ -33,7 +33,7 @@ public class RegistrationController {
             return "redirect:/user-page";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
-            return "/registration";
+            return "/sign-up";
         }
     }
 }

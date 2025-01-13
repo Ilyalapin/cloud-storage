@@ -5,15 +5,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/login")
-public class LoginController {
+@RequestMapping("/sign-in")
+public class SignInController {
 
     @GetMapping
-    public String loginPage(@RequestParam(value = "error", required = false) String error,
-                            Model model) {
+    public String signInPage(@RequestParam(value = "error", required = false) String error,
+                             Model model) {
         if (error != null) {
             model.addAttribute("error", "Invalid username or password.");
         }
-        return "login";
+        return "sign-in";
     }
 }
