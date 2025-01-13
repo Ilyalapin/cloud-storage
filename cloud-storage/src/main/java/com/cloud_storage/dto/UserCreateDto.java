@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class UserCreateDto {
 
     private Integer Id;
@@ -18,4 +18,10 @@ public class UserCreateDto {
     private String password;
 
     private Role role;
+
+    public UserCreateDto(String username, String password, Role role) {
+        this.username = username;
+        this.password = password;
+        this.role = role;
+    }
 }

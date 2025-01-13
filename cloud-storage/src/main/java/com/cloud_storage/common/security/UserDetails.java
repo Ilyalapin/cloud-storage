@@ -1,4 +1,4 @@
-package com.cloud_storage.security;
+package com.cloud_storage.common.security;
 
 import com.cloud_storage.entity.User;
 import org.springframework.security.core.GrantedAuthority;
@@ -7,10 +7,10 @@ import java.util.Collection;
 import java.util.List;
 
 public class UserDetails implements org.springframework.security.core.userdetails.UserDetails {
-    private final User person;
+    private final User user;
 
-    public UserDetails(User person) {
-        this.person = person;
+    public UserDetails(User user) {
+        this.user = user;
     }
 
     @Override
@@ -20,12 +20,12 @@ public class UserDetails implements org.springframework.security.core.userdetail
 
     @Override
     public String getPassword() {
-        return this.person.getPassword();
+        return this.user.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return this.person.getUsername();
+        return this.user.getUsername();
     }
 
     @Override
@@ -51,7 +51,7 @@ public class UserDetails implements org.springframework.security.core.userdetail
 //        return org.springframework.security.core.userdetails.UserDetails.super.isEnabled();
         return true;
     }
-    public User getPerson() {
-        return this.person;
+    public User getUser() {
+        return this.user;
     }
 }

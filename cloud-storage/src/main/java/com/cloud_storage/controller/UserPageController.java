@@ -34,11 +34,4 @@ userService.delete(id);
         return "redirect:/home";
     }
 
-
-//    //TODO ВОЗМОЖНО ЭТОТ МЕТОД НЕ ПОНАДОБИТСЯ
-//    @GetMapping("/{id}")
-//    public String findById(@PathVariable("id") int id, Model model) {
-////        model.addAttribute("user", userService.findById());
-//        return "user";
-//    }
 }

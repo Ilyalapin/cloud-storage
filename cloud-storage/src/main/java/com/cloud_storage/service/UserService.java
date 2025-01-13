@@ -1,15 +1,15 @@
 package com.cloud_storage.service;
 
 import com.cloud_storage.common.MapingUtil;
+import com.cloud_storage.common.exception.UserAlreadeExistException;
+import com.cloud_storage.common.exception.UserNotFoundException;
 import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.dto.UserCreateDto;
 import com.cloud_storage.entity.Role;
 import com.cloud_storage.entity.User;
-import com.cloud_storage.exception.UserAlreadeExistException;
-import com.cloud_storage.exception.UserNotFoundException;
 import com.cloud_storage.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.exception.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 
-
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class UserService implements UserDetailsService {
@@ -36,34 +36,31 @@ public class UserService implements UserDetailsService {
 
     }
 
-
     @Transactional
-    public UserCreateDto create(LoginDto loginDto) {
-        UserCreateDto userDto = new UserCreateDto();
-        userDto.setUsername(loginDto.getUsername());
-        userDto.setPassword(encoder.encode(loginDto.getPassword()));
-        userDto.setRole(Role.USER);
-
+    public UserCreateDto save(LoginDto loginDto) {
+        UserCreateDto userDto = new UserCreateDto(
+                loginDto.getUsername(),
+                encoder.encode(loginDto.getPassword()),
+                Role.USER
+        );
         try {
             userRepository.save(MapingUtil.convertToEntity(userDto));
+            log.info("User saved successfully.");
             return userDto;
-        } catch (ConstraintViolationException e) {
+        } catch (RuntimeException e) {
             throw new UserAlreadeExistException("User with login " + userDto.getUsername() + " already exists");
         }
     }
 
+
     @Transactional
-    public boolean delete(int id) {
-        return userRepository.findById(id)
-                .map(entity -> {
-                    userRepository.delete(entity);
-//                            userRepository.flush();
-                    return true;
-                })
-                .orElse(false);
-
-
+    public void delete(int id) {
+        User entity = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User with id: " + id+ " not found"));
+        userRepository.delete(entity);
+        log.info("User deleted successfully.");
     }
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

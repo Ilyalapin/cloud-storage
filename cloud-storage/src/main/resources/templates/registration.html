@@ -6,9 +6,6 @@
 <body>
 
 <form th:action="@{/registration}" method="post" th:object="${user}">
-    <div th:if="${param.error}" style="color: red;">
-        Invalid login or password. Please try again.
-    </div>
     <div class="header">
         <div class="container-center">
             <div class="row">
