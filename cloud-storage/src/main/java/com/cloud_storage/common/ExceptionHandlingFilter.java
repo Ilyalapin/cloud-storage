@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static jakarta.servlet.http.HttpServletResponse.*;
+
 @WebFilter("/*")
 public class ExceptionHandlingFilter extends HttpFilter {
     private final ObjectMapper objectMapper = new ObjectMapper();

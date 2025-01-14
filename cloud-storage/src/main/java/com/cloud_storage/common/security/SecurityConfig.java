@@ -19,18 +19,18 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)  throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/image/**").permitAll()
-                        .requestMatchers("/home", "/sign-in","/sign-up").permitAll()
+                        .requestMatchers("/home", "/sign-in", "/sign-up").permitAll()
                         .requestMatchers("/admin/**").hasRole(ADMIN.getAuthority())
                         .requestMatchers(antMatcher("/user-page/delete")).hasAnyAuthority(ADMIN.getAuthority(), USER.getAuthority())
                         .anyRequest().authenticated())
                 .formLogin(login -> login
                         .loginPage("/sign-in")
-                        .defaultSuccessUrl("/user-page",true)
+                        .defaultSuccessUrl("/user-page", true)
                         .failureUrl("/sign-in?error=true")
                         .permitAll())
                 .logout(logout -> logout
