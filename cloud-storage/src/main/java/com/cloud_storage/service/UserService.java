@@ -5,6 +5,7 @@ import com.cloud_storage.common.exception.UserAlreadeExistException;
 import com.cloud_storage.common.exception.UserNotFoundException;
 import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.dto.UserCreateDto;
+import com.cloud_storage.dto.UserReadDto;
 import com.cloud_storage.entity.Role;
 import com.cloud_storage.entity.User;
 import com.cloud_storage.repository.UserRepository;
@@ -27,37 +28,36 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
 
+
     @Transactional(readOnly = true)
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(
                         () -> new UserNotFoundException("User with name: " + username + " not found")
                 );
-
     }
 
+
     @Transactional
-    public UserCreateDto save(LoginDto loginDto) {
-        UserCreateDto userDto = new UserCreateDto(
+    public UserReadDto save(LoginDto loginDto) {
+        UserCreateDto userCreateDto = new UserCreateDto(
                 loginDto.getUsername(),
                 encoder.encode(loginDto.getPassword()),
                 Role.USER
         );
         try {
-            userRepository.save(MapingUtil.convertToEntity(userDto));
-            log.info("User saved successfully.");
-            return userDto;
-        } catch (RuntimeException e) {
-            throw new UserAlreadeExistException("User with login " + userDto.getUsername() + " already exists");
+            User user = userRepository.save(MapingUtil.convertToEntity(userCreateDto));
+            return MapingUtil.convertToDto(user);
+        }catch (RuntimeException e) {
+            throw new UserAlreadeExistException("User with login " + userCreateDto.getUsername() + " already exists");
         }
     }
 
 
     @Transactional
-    public void delete(int id) {
-        User entity = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User with id: " + id+ " not found"));
-        userRepository.delete(entity);
+    public void delete(String username) {
+        User user = findByUsername(username);
+        userRepository.delete(user);
         log.info("User deleted successfully.");
     }
 
@@ -70,7 +70,7 @@ public class UserService implements UserDetailsService {
                         user.getPassword(),
                         Collections.singleton(new SimpleGrantedAuthority(user.getRole().name()))
                 ))
-                .orElseThrow(()->new UsernameNotFoundException("User with name: "+username+" not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User with name: " + username + " not found"));
 
     }
 }

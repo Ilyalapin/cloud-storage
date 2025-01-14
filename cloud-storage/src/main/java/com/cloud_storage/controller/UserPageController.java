@@ -1,6 +1,7 @@
 package com.cloud_storage.controller;
 
 import com.cloud_storage.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,7 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-@SessionAttributes("userDto")
 @RequestMapping("/user-page")
 @RequiredArgsConstructor
 public class UserPageController {
@@ -17,7 +17,8 @@ public class UserPageController {
 
 
     @GetMapping
-    public String userPage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+    public String userPage(@AuthenticationPrincipal UserDetails userDetails,
+                           Model model) {
 
         String userInfo = userDetails.getAuthorities().toString()
                 .replace("[", "")
@@ -27,10 +28,13 @@ public class UserPageController {
         return "user-page";
     }
 
-    //@DeleteMapping("/{id}")
-    @PostMapping("/{id}/delete")
-    public String delete(@PathVariable("id") int id) {
-userService.delete(id);
+
+    @PostMapping("/delete")
+    public String delete(@AuthenticationPrincipal UserDetails userDetails,
+                         HttpSession session) {
+        userService.delete(userDetails.getUsername());
+        session.invalidate();
+
         return "redirect:/home";
     }
 

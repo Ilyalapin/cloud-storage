@@ -87,7 +87,8 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close
                             </button>
-                            <form th:action="@{/{id}/delete}" method="post">
+                            <form th:action="@{/user-page/delete}" method="post">
+<!--                            <form th:action="@{/user-page/${id}/delete(id=${userid})}" method="post">-->
                                 <button type="submit" class="btn btn-primary">Delete</button>
                             </form>
                         </div>

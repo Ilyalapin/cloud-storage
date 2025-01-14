@@ -17,6 +17,7 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 @EnableWebSecurity
 public class SecurityConfig {
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)  throws Exception {
         http
@@ -25,7 +26,7 @@ public class SecurityConfig {
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/image/**").permitAll()
                         .requestMatchers("/home", "/sign-in","/sign-up").permitAll()
                         .requestMatchers("/admin/**").hasRole(ADMIN.getAuthority())
-                        .requestMatchers(antMatcher("/user-page/{\\d}/delete")).hasAnyAuthority(ADMIN.getAuthority(), USER.getAuthority())
+                        .requestMatchers(antMatcher("/user-page/delete")).hasAnyAuthority(ADMIN.getAuthority(), USER.getAuthority())
                         .anyRequest().authenticated())
                 .formLogin(login -> login
                         .loginPage("/sign-in")
@@ -39,6 +40,7 @@ public class SecurityConfig {
                 );
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

@@ -1,6 +1,7 @@
 package com.cloud_storage.common;
 
 import com.cloud_storage.dto.UserCreateDto;
+import com.cloud_storage.dto.UserReadDto;
 import com.cloud_storage.entity.User;
 import org.modelmapper.ModelMapper;
 
@@ -12,7 +13,7 @@ public class MapingUtil {
     }
 
 
-    public static UserCreateDto convertToDto(User user) {
-        return MODEL_MAPPER.map(user, UserCreateDto.class);
+    public static UserReadDto convertToDto(User user) {
+        return MODEL_MAPPER.map(user, UserReadDto.class);
     }
 }

@@ -6,14 +6,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
 
-@Value
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
-public class UserCreateDto {
+public class UserReadDto {
 
-    String username;
+    private int Id;
 
-    String password;
+    private String username;
 
-    Role role;
+    private String password;
+
+    private Role role;
 }
-

@@ -31,7 +31,8 @@ public class SignUpController {
             httpServletRequest.login(loginDto.getUsername(), loginDto.getPassword());
 
             return "redirect:/user-page";
-        } catch (RuntimeException e) {
+        }
+        catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "/sign-up";
         }
