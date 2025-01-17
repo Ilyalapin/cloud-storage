@@ -1,4 +1,4 @@
-package com.cloud_storage.common.security;
+package com.cloud_storage.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

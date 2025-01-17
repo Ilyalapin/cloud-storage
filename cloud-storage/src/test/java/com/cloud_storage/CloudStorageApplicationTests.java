@@ -9,8 +9,8 @@ import org.testcontainers.utility.TestcontainersConfiguration;
 @SpringBootTest
 class CloudStorageApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }

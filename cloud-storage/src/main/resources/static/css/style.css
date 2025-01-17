@@ -66,7 +66,7 @@ body {
     color: #696969;
 }
 
-.info-for-guest{
+.info-for-guest {
     color: #696969;
     position: fixed;
     bottom: 20px;
@@ -74,7 +74,8 @@ body {
     transform: translateX(-49%);
     padding: 10px;
 }
-.btn-add{
+
+.btn-add {
     background-color: #1F75FE;
     color: white;
     justify-content: center;
@@ -85,16 +86,18 @@ body {
 }
 
 
-.cloud-logo img{
+.cloud-logo img {
     width: 50px;
     height: 35px;
     margin-left: 100px;
     margin-top: 10px;
 }
-.header-line{
+
+.header-line {
     background-color: white;
     height: 60px;
 }
+
 .label-text {
     position: absolute;
     font-weight: 100;
@@ -102,11 +105,13 @@ body {
     margin-left: 200px;
     top: 10px;
 }
-.btn-group{
+
+.btn-group {
     position: absolute;
     top: 10px;
     right: 85px;
 }
+
 .btn-group .btn-primary {
     border-radius: 10px;
     background-color: #007bff;
@@ -115,15 +120,17 @@ body {
     color: white;
 }
 
-.dropdown-item{
+.dropdown-item {
     border-radius: 10px;
 }
+
 .search {
     width: 1340px;
     margin-left: 300px;
     height: 40px;
 }
-.btn-search{
+
+.btn-search {
     background-color: #007bff;
     color: white;
     font-weight: bold;
@@ -138,13 +145,14 @@ body {
     margin-top: 45px;
     font-size: 20px;
 }
-.search{
+
+.search {
     padding-left: 20px;
     background-color: white;
     font-weight: 300;
 }
 
-.container-center-home{
+.container-center-home {
     width: 75%;
     height: 500px;
     background-color: whitesmoke;
@@ -157,7 +165,7 @@ body {
 }
 
 /*USER-PAGE*/
-.container-center-user-page{
+.container-center-user-page {
     width: 75%;
     height: 540px;
     background-color: whitesmoke;
@@ -170,7 +178,8 @@ body {
     flex-direction: column;
     padding: 20px;
 }
-.upload-folders, .upload-files{
+
+.upload-folders, .upload-files {
     font-size: 15px;
     font-weight: bold;
     padding-top: 5px;
@@ -182,18 +191,21 @@ body {
     border-radius: 10px;
     border: 1px solid #696969;
 }
-.btn-add-upload{
+
+.btn-add-upload {
 
     display: flex;
     margin-left: 50px;
     margin-top: -50px;
     flex-direction: column;
 }
-h3{
+
+h3 {
     margin-top: 60px;
     margin-left: 20px;
 }
-.folders, .files{
+
+.folders, .files {
     border-radius: 10px;
     border: 1px solid #696969;
     padding: 20px;
@@ -203,7 +215,8 @@ h3{
     width: 97%;
     height: 100px;
 }
-.container-center-storage{
+
+.container-center-storage {
     margin-top: -940px;
 }
 

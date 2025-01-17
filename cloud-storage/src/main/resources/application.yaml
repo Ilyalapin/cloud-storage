@@ -12,6 +12,18 @@ spring:
       format_sql: true
 
 
+minio:
+  url: http://localhost:9001
+  credentials:
+    user: minioadmin62
+    password: minioadmin62
+
+
+
+
+
+
+
 
 
 
