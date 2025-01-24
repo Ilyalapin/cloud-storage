@@ -1,6 +1,7 @@
 package com.cloud_storage.unitTest.service;
 
-import com.cloud_storage.common.exception.UserAlreadeExistException;
+import com.cloud_storage.common.exception.InvalidParameterException;
+import com.cloud_storage.common.exception.UserAlreadyExistException;
 import com.cloud_storage.common.exception.UserNotFoundException;
 import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.dto.UserReadDto;
@@ -68,9 +69,16 @@ public class UserServiceTest {
     }
 
     @Test
-    void shouldThrowRuntimeExceptionWhenSaveFails() {
-        Mockito.when(userRepository.save(user)).thenThrow(RuntimeException.class);
-        Assertions.assertThrows(UserAlreadeExistException.class, () -> userService.save(loginDto));
+    void shouldThrowInvalidParameterExceptionWhenInvalidLogin() {
+        LoginDto loginDto = new LoginDto(null, password);
+        Assertions.assertThrows(InvalidParameterException.class, () -> userService.save(loginDto));
+    }
+
+    @Test
+    void shouldThrowUserAlreadyExistExceptionWhenUserAlreadyExist() {
+        Mockito.when(encoder.encode(Mockito.any())).thenReturn(password);
+        Mockito.doThrow(UserAlreadyExistException.class).when(userRepository).save(Mockito.any(User.class));
+        Assertions.assertThrows(UserAlreadyExistException.class, () -> userService.save(loginDto));
     }
 
     @Test

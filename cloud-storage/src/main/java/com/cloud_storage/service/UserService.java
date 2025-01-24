@@ -1,7 +1,8 @@
 package com.cloud_storage.service;
 
 import com.cloud_storage.common.MapingUtil;
-import com.cloud_storage.common.exception.UserAlreadeExistException;
+import com.cloud_storage.common.exception.InvalidParameterException;
+import com.cloud_storage.common.exception.UserAlreadyExistException;
 import com.cloud_storage.common.exception.UserNotFoundException;
 import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.dto.UserCreateDto;
@@ -28,7 +29,6 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder encoder;
 
-
     @Transactional(readOnly = true)
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
@@ -45,11 +45,14 @@ public class UserService implements UserDetailsService {
                 encoder.encode(loginDto.getPassword()),
                 Role.USER
         );
+        if (userCreateDto.getUsername() == null || userCreateDto.getPassword() == null) {
+            throw new InvalidParameterException("Invalid username or password");
+        }
         try {
             User user = userRepository.save(MapingUtil.convertToEntity(userCreateDto));
             return MapingUtil.convertToDto(user);
         }catch (RuntimeException e) {
-            throw new UserAlreadeExistException("User with login " + userCreateDto.getUsername() + " already exists");
+            throw new UserAlreadyExistException("User with login " + userCreateDto.getUsername() + " already exists");
         }
     }
 
@@ -71,6 +74,5 @@ public class UserService implements UserDetailsService {
                         Collections.singleton(new SimpleGrantedAuthority(user.getRole().name()))
                 ))
                 .orElseThrow(() -> new UsernameNotFoundException("User with name: " + username + " not found"));
-
     }
 }
