@@ -9,14 +9,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static com.cloud_storage.entity.Role.ADMIN;
-import static com.cloud_storage.entity.Role.USER;
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -24,23 +19,20 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/image/**").permitAll()
-                        .requestMatchers("/home", "/sign-in", "/sign-up").permitAll()
-                        .requestMatchers("/admin/**").hasRole(ADMIN.getAuthority())
-                        .requestMatchers(antMatcher("/user-page/delete")).hasAnyAuthority(ADMIN.getAuthority(), USER.getAuthority())
+                        .requestMatchers("/storage/guest-page", "/user/sign-up", "/user").permitAll()
                         .anyRequest().authenticated())
                 .formLogin(login -> login
-                        .loginPage("/sign-in")
-                        .defaultSuccessUrl("/user-page", true)
+                        .loginPage("/user/sign-in")
+                        .defaultSuccessUrl("/storage/user-page", true)
                         .failureUrl("/sign-in?error=true")
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/sign-out")
-                        .logoutSuccessUrl("/home")
+                        .logoutSuccessUrl("/storage/guest-page")
                         .deleteCookies("JSESSIONID")
                 );
         return http.build();
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

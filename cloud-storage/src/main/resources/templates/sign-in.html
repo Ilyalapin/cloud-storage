@@ -4,7 +4,7 @@
     <th:block th:replace="~{fragment/head :: commonHead}"></th:block>
 </head>
 <body>
-<form th:action="@{/sign-in}" method="post" th:object="${user}">
+<form th:action="@{/user/sign-in}" th:method="post" th:object="${user}">
     <div class="header">
         <div class="container-center">
             <div class="row">
@@ -19,7 +19,7 @@
 
                         <input class="btn-sign" type="submit" value="Sign in">
 
-                        <h5 class="create-account">I don't have an account -<a class='nav-item2' th:href="@{/sign-up}">Sign
+                        <h5 class="create-account">I don't have an account -<a class='nav-item2' th:href="@{/user/sign-up}">Sign
                             up</a>
                         </h5>
                     </div>

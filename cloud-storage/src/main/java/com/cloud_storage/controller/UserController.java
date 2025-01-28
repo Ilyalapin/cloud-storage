@@ -4,19 +4,33 @@ import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @Controller
+@RequestMapping("/user")
 @RequiredArgsConstructor
-@RequestMapping("/sign-up")
-public class SignUpController {
+public class UserController {
     private final UserService userService;
 
+    @GetMapping("/sign-in")
+    public String signInPage(@RequestParam(value = "error", required = false) String error,
+                             Model model) {
+        if (error != null) {
+            model.addAttribute("error", "Invalid username or password.");
+        }
+        return "sign-in";
+    }
 
-    @GetMapping
+
+    @GetMapping("/sign-up")
     public String signUpPage() {
         return "sign-up";
     }
@@ -30,11 +44,20 @@ public class SignUpController {
             userService.save(loginDto);
             httpServletRequest.login(loginDto.getUsername(), loginDto.getPassword());
 
-            return "redirect:/user-page";
-        }
-        catch (RuntimeException e) {
+            return "redirect:/storage/user-page";
+        } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "/sign-up";
         }
+    }
+
+
+    @DeleteMapping
+    public String delete(@AuthenticationPrincipal UserDetails userDetails,
+                         HttpSession session) {
+        userService.delete(userDetails.getUsername());
+        session.invalidate();
+
+        return "redirect:/storage/guest-page";
     }
 }

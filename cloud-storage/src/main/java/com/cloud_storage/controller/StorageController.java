@@ -1,7 +1,6 @@
 package com.cloud_storage.controller;
 
 import com.cloud_storage.service.UserService;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,13 +9,19 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/user-page")
+@RequestMapping("/storage")
 @RequiredArgsConstructor
-public class UserPageController {
+public class StorageController {
     private final UserService userService;
 
 
-    @GetMapping
+    @GetMapping("/guest-page")
+    public String guestPage() {
+        return "home";
+    }
+
+
+    @GetMapping("/user-page")
     public String userPage(@AuthenticationPrincipal UserDetails userDetails,
                            Model model) {
 
@@ -27,15 +32,4 @@ public class UserPageController {
         model.addAttribute("userInfo", userInfo);
         return "user-page";
     }
-
-
-    @PostMapping("/delete")
-    public String delete(@AuthenticationPrincipal UserDetails userDetails,
-                         HttpSession session) {
-        userService.delete(userDetails.getUsername());
-        session.invalidate();
-
-        return "redirect:/home";
-    }
-
 }

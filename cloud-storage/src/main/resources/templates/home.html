@@ -22,12 +22,12 @@
             </button>
             <ul class="dropdown-menu">
                 <li>
-                    <form th:action="@{/sign-in}" method="get">
+                    <form th:action="@{/user/sign-in}" th:method="get">
                         <button type="submit" class="dropdown-item">Sign In</button>
                     </form>
                 </li>
                 <li>
-                    <form th:action="@{/sign-up}" method="get">
+                    <form th:action="@{/user/sign-up}" th:method="get">
                         <button type="submit" class="dropdown-item">Sign Up</button>
                     </form>
                 </li>
