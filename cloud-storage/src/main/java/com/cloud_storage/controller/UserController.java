@@ -1,6 +1,8 @@
 package com.cloud_storage.controller;
 
 import com.cloud_storage.dto.LoginDto;
+import com.cloud_storage.dto.UserReadDto;
+import com.cloud_storage.service.MinioService;
 import com.cloud_storage.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final MinioService minioService;
 
     @GetMapping("/sign-in")
     public String signInPage(@RequestParam(value = "error", required = false) String error,
@@ -35,15 +38,16 @@ public class UserController {
         return "sign-up";
     }
 
-
     @PostMapping
     public String create(@ModelAttribute("user") LoginDto loginDto,
                          HttpServletRequest httpServletRequest,
                          Model model) throws ServletException {
         try {
-            userService.save(loginDto);
-            httpServletRequest.login(loginDto.getUsername(), loginDto.getPassword());
+            UserReadDto user = userService.save(loginDto);
 
+            minioService.createUserFolder(String.valueOf(user.getId()));
+
+            httpServletRequest.login(loginDto.getUsername(), loginDto.getPassword());
             return "redirect:/storage/user-page";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());

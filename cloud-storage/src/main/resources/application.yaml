@@ -10,6 +10,7 @@ spring:
     properties.hibernate:
       show_sql: true
       format_sql: true
+    open-in-view: false
   mvc:
     hiddenmethod:
       filter:
@@ -21,6 +22,8 @@ minio:
   credentials:
     user: minioadmin62
     password: minioadmin62
+  bucket:
+    name: user-files
 
 
 

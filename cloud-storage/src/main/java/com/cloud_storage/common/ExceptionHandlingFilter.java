@@ -1,6 +1,7 @@
 package com.cloud_storage.common;
 
 import com.cloud_storage.common.exception.InvalidParameterException;
+import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.common.exception.UserAlreadyExistException;
 import com.cloud_storage.common.exception.UserNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +31,8 @@ public class ExceptionHandlingFilter extends HttpFilter {
             writeErrorResponse(res, SC_NOT_FOUND, e);
         } catch (InvalidParameterException e) {
             writeErrorResponse(res, SC_BAD_REQUEST, e);
+        } catch (MinioException e) {
+            writeErrorResponse(res, SC_INTERNAL_SERVER_ERROR, e);
         }
     }
 
