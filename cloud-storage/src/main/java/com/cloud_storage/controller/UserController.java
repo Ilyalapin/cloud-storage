@@ -1,5 +1,6 @@
 package com.cloud_storage.controller;
 
+import com.cloud_storage.common.UserPrincipal;
 import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.dto.UserReadDto;
 import com.cloud_storage.service.MinioService;
@@ -10,7 +11,6 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -57,11 +57,21 @@ public class UserController {
 
 
     @DeleteMapping
-    public String delete(@AuthenticationPrincipal UserDetails userDetails,
+    public String delete(@AuthenticationPrincipal UserPrincipal userPrincipal,
                          HttpSession session) {
-        userService.delete(userDetails.getUsername());
+        minioService.deleteUserFolder(String.valueOf(userPrincipal.getId()));
+
+        userService.delete(userPrincipal.getUsername());
         session.invalidate();
 
         return "redirect:/storage/guest-page";
     }
+//    @DeleteMapping
+//    public String delete(@AuthenticationPrincipal UserDetails userDetails,
+//                         HttpSession session) {
+//        userService.delete(userDetails.getUsername());
+//        session.invalidate();
+//
+//        return "redirect:/storage/guest-page";
+//    }
 }

@@ -1,10 +1,8 @@
 package com.cloud_storage.service;
 
 import com.cloud_storage.common.exception.MinioException;
-import io.minio.BucketExistsArgs;
-import io.minio.MakeBucketArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
+import io.minio.*;
+import io.minio.messages.Item;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +50,29 @@ public class MinioService {
                     .stream(new ByteArrayInputStream(new byte[]{}), 0, -1)
                     .build());
             log.info("Folder:{} created successfully", folderName);
+        } catch (Exception e) {
+            throw new MinioException(e.getMessage());
+        }
+    }
+
+
+    public void deleteUserFolder(String userId) throws MinioException {
+        String folderName = "user-" + userId + "-files/";
+        try {
+            Iterable<Result<Item>> objects = minioClient.listObjects(ListObjectsArgs.builder()
+                    .bucket(bucketName)
+                    .prefix(folderName)
+                    .build());
+
+            for (Result<Item> result : objects) {
+                Item item = result.get();
+                minioClient.removeObject(RemoveObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(item.objectName())
+                        .build());
+                log.info("Deleted object: {}", item.objectName());
+            }
+            log.info("User folder {} deleted successfully", folderName);
         } catch (Exception e) {
             throw new MinioException(e.getMessage());
         }

@@ -1,9 +1,9 @@
 package com.cloud_storage.controller;
 
+import com.cloud_storage.common.UserPrincipal;
 import com.cloud_storage.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,14 +22,25 @@ public class StorageController {
 
 
     @GetMapping("/user-page")
-    public String userPage(@AuthenticationPrincipal UserDetails userDetails,
+    public String userPage(@AuthenticationPrincipal UserPrincipal userPrincipal,
                            Model model) {
 
-        String userInfo = userDetails.getAuthorities().toString()
+        String userInfo = userPrincipal.getAuthorities().toString()
                 .replace("[", "")
-                .replace("]", "") + ": " + userDetails.getUsername();
+                .replace("]", "") + ": " + userPrincipal.getUsername();
 
         model.addAttribute("userInfo", userInfo);
         return "user-page";
     }
+//    @GetMapping("/user-page")
+//    public String userPage(@AuthenticationPrincipal UserDetails userDetails,
+//                           Model model) {
+//
+//        String userInfo = userDetails.getAuthorities().toString()
+//                .replace("[", "")
+//                .replace("]", "") + ": " + userDetails.getUsername();
+//
+//        model.addAttribute("userInfo", userInfo);
+//        return "user-page";
+//    }
 }
