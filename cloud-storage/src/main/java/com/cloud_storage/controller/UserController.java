@@ -44,8 +44,9 @@ public class UserController {
                          Model model) throws ServletException {
         try {
             UserReadDto user = userService.save(loginDto);
+            String folderName = "user-" +user.getId()+ "-files/";
 
-            minioService.createUserFolder(String.valueOf(user.getId()));
+            minioService.createFolder(folderName);
 
             httpServletRequest.login(loginDto.getUsername(), loginDto.getPassword());
             return "redirect:/storage/user-page";
@@ -59,7 +60,9 @@ public class UserController {
     @DeleteMapping
     public String delete(@AuthenticationPrincipal UserPrincipal userPrincipal,
                          HttpSession session) {
-        minioService.deleteUserFolder(String.valueOf(userPrincipal.getId()));
+        String folderName = "user-" +userPrincipal.getId()+ "-files/";
+
+        minioService.deleteFolder(folderName);
 
         userService.delete(userPrincipal.getUsername());
         session.invalidate();

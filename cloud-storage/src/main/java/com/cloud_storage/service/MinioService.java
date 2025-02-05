@@ -42,8 +42,7 @@ public class MinioService {
     }
 
 
-    public void createUserFolder(String userId) throws MinioException {
-        String folderName = "user-" + userId + "-files";
+    public void createFolder(String folderName) throws MinioException {
         try {
             minioClient.putObject(PutObjectArgs.builder()
                     .bucket(bucketName).object(folderName + "/")
@@ -56,8 +55,7 @@ public class MinioService {
     }
 
 
-    public void deleteUserFolder(String userId) throws MinioException {
-        String folderName = "user-" + userId + "-files/";
+    public void deleteFolder(String folderName) throws MinioException {
         try {
             Iterable<Result<Item>> objects = minioClient.listObjects(ListObjectsArgs.builder()
                     .bucket(bucketName)
