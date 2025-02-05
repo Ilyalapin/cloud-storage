@@ -46,13 +46,16 @@ body {
     width: 100%;
 }
 
-/* HOME new*/
+/* HOME */
 .header2 {
     font-family: 'Nunito', sans-serif;
     background-color: #DCDCDC;
     background-repeat: no-repeat;
     background-size: cover;
     height: 100vh;
+}
+.container-center-storage-guest{
+    margin-top: 70px;
 }
 
 .btn-search {
@@ -124,68 +127,27 @@ body {
     border-radius: 10px;
 }
 
-.search {
-    width: 1340px;
-    margin-left: 300px;
-    height: 40px;
-}
-
-.btn-search {
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-    height: 40px;
-}
-
-.btn-search, .search {
-
-    border-radius: 10px;
-    cursor: pointer;
-    border: 1px solid #696969;
-    margin-top: 45px;
-    font-size: 20px;
-}
-
-.search {
-    padding-left: 20px;
-    background-color: white;
-    font-weight: 300;
-}
-
-.container-center-home {
-    width: 75%;
-    height: 500px;
-    background-color: whitesmoke;
-    border-radius: 10px;
-    border: 1px solid #696969;
-    display: flex;
-    margin-left: 300px;
-    margin-top: 20px;
-    padding: 20px;
-}
-
 /*USER-PAGE*/
-.container-center-user-page {
-    width: 75%;
-    height: 540px;
+.container-center-user-page, .container-center-home {
+    width: 1717px;
+    height: 730px;
     background-color: whitesmoke;
     border-radius: 10px;
     border: 1px solid #696969;
     display: flex;
-    margin-left: 300px;
-    margin-top: -60px;
-
+    margin-left: 100px;
+    margin-top: 13px;
     flex-direction: column;
     padding: 20px;
 }
 
-.upload-folders, .upload-files {
+.upload-folders, .upload-files, .new-folder {
     font-size: 15px;
     font-weight: bold;
     padding-top: 5px;
-    margin-top: 10px;
-    width: 200px;
-    height: 50px;
+    margin-top: 13px;
+    width: 150px;
+    height: 40px;
     background-color: #007bff;
     color: white;
     border-radius: 10px;
@@ -193,32 +155,95 @@ body {
 }
 
 .btn-add-upload {
-
     display: flex;
-    margin-left: 50px;
-    margin-top: -50px;
-    flex-direction: column;
-}
-
-h3 {
-    margin-top: 60px;
-    margin-left: 20px;
-}
-
-.folders, .files {
-    border-radius: 10px;
-    border: 1px solid #696969;
-    padding: 20px;
-    margin-top: 10px;
-    margin-left: 20px;
-    margin-right: 20px;
-    width: 97%;
-    height: 100px;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-left: 100px;
 }
 
 .container-center-storage {
     margin-top: -940px;
 }
+
+.btn-toolbar {
+    display: flex;
+    align-items: center;
+    margin-left: 100px;
+    margin-top: 13px;
+}
+
+.search {
+    width: 1540px;
+    height: 40px;
+    padding-left: 20px;
+    background-color: white;
+    font-weight: 300;
+}
+
+.btn-search {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    height: 40px;
+    width: 150px;
+}
+
+.btn-search, .search {
+
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid #696969;
+    font-size: 20px;
+}
+.buttons{
+    padding-left: 5px;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+    margin-right: 50px;
+}
+
+.col-md-5 {
+    display: flex;
+    justify-content: space-between;
+    margin-left: 100px;
+}
+
+h4 {
+    padding-bottom: 5px;
+}
+
+.line{
+    height: 1px;
+    width: 95%;
+    background-color: #696969;
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
+.folder img, .file img {
+    margin-left: 100px;
+    margin-top: 10px;
+}
+.folder img{
+    height: 30px;
+    width: 33px;
+}
+.file img {
+    width: auto;
+    height: 35px;
+}
+.folder, .file {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.folder b {
+    margin-top: 10px;
+    margin-left: 204px;
+}
+
 
 
 

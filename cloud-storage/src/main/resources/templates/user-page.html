@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 
-    <div class= 'header-line'>
+    <div class='header-line'>
         <div class="cloud-logo">
             <img src="/image/cloud_logo.png" alt="cloud-logo">
         </div>
@@ -21,7 +21,7 @@
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
                     aria-expanded="false">
-                                <span th:text="${userInfo}">User info</span>
+                <span th:text="${userInfo}">User info</span>
             </button>
             <ul class="dropdown-menu">
                 <li>
@@ -95,9 +95,20 @@
                 </div>
             </div>
         </div>
-        </div>
     </div>
+</div>
 <div class="container-center-storage">
+    <div class="btn-add-upload">
+        <form action="#" method="get">
+            <button type="submit" class="new-folder">NEW FOLDER</button>
+        </form>
+        <form action="#" method="get">
+            <button type="submit" class="upload-folders">UPLOAD FOLDER</button>
+        </form>
+        <form action="#" method="get">
+            <button type="submit" class="upload-files">UPLOAD FILE</button>
+        </form>
+    </div>
     <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
         <form action="#" method="get">
             <input class="search" placeholder="Search in storage"
@@ -107,53 +118,68 @@
             <input class="btn-search" type="submit" value="Search">
         </form>
     </div>
-    <div class="btn-add-upload">
-        <form action="#" method="get">
-            <button type="submit" class="upload-folders">UPLOAD FOLDERS</button>
-        </form>
-        <form action="#" method="get">
-            <button type="submit" class="upload-files">UPLOAD FILES</button>
-        </form>
-    </div>
+
     <div class="error" th:if="${error}" style="color: red;">
         <span th:text="${error}"></span>
     </div>
 
     <div class="container-center-user-page">
 
-             <h2>Storage</h2>
-
-        <div class="container-center-title">
-            <h3>Folders</h3>
-        </div>
-
-        <div class="folders">
-
-        </div>
-
-            <div class="container-center-title">
-                <h3>Files</h3>
-
+        <div class="row">
+            <div class="col-md-5">
+                <h4>Name</h4>
             </div>
 
-            <div class="files">
-
+            <div class="col-md-5">
+                <h4>Size</h4>
             </div>
+
+            <div class="col-md-5">
+            </div>
+        </div>
+
+        <div class="line">
+        </div>
+
+        <form action="#" method="get">
+        <div class="folder">
+            <img src="/image/folder.png" alt="folder">
+            <b >-</b>
+<!--            todo в Бэшке реализовать логику отображения размера папки или файла-->
+            <th:block th:replace="~{fragment/buttons :: buttons}"></th:block>
+        </div>
+
+        <div class="line">
+        </div>
+        </form>
+
+        <form action="#" method="get">
+        <div class="file">
+<!--            <img src="/image/file.png" alt="file">-->
+<!--            <b >-</b>-->
+            <!--            todo в Бэшке реализовать логику отображения размера папки или файла-->
+<!--            <th:block th:replace="~{fragment/buttons :: buttons}"></th:block>-->
+        </div>
+
+<!--        <div class="line">-->
+<!--        </div>-->
+        </form>
 
     </div>
 </div>
+</div>
 
-    <div class="container-center2">
-        <div class="row">
-            <div class="col-md-4">
-            </div>
+<!--<div class="container-center2">-->
+<!--    <div class="row">-->
+<!--        <div class="col-md-4">-->
+<!--        </div>-->
 
-            <div class="col-md-4">
-            </div>
+<!--        <div class="col-md-4">-->
+<!--        </div>-->
 
-            <div class="col-md-4">
-            </div>
-        </div>
-    </div>
+<!--        <div class="col-md-4">-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
 </body>
 </html>
