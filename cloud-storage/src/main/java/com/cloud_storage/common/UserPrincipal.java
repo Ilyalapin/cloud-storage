@@ -23,6 +23,10 @@ public class UserPrincipal implements UserDetails {
         return authorities;
     }
 
+    public String getRole(){
+        return user.getRole().name();
+    }
+
     public int getId() {
         return user.getId();
     }

@@ -66,12 +66,4 @@ public class UserController {
 
         return "redirect:/storage/guest-page";
     }
-//    @DeleteMapping
-//    public String delete(@AuthenticationPrincipal UserDetails userDetails,
-//                         HttpSession session) {
-//        userService.delete(userDetails.getUsername());
-//        session.invalidate();
-//
-//        return "redirect:/storage/guest-page";
-//    }
 }
