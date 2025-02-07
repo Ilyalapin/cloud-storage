@@ -21,6 +21,10 @@ public class StorageController {
                            Model model) {
         String userInfo = userPrincipal.getRole() + ": " + userPrincipal.getUsername();
 
+        /** здесь по идее юзер должен сразу видеть содержимое директории user-62-files/
+         * скорее всего как-то так: List<Item> items = minioService.list(Path.of("user-62-files/"));
+         * и потом как-то передаваться в модел: model.addAttribute("items", items);
+         */
         model.addAttribute("userInfo", userInfo);
         return "user-page";
     }

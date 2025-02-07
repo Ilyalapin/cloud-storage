@@ -1,7 +1,7 @@
 package com.cloud_storage.common.exception;
 
-public class MinioException extends RuntimeException {
-    public MinioException(String message) {
-        super(message);
+public class MinioException extends Exception {
+    public MinioException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

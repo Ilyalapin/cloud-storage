@@ -1,6 +1,7 @@
 package com.cloud_storage.controller;
 
 import com.cloud_storage.common.UserPrincipal;
+import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.dto.UserReadDto;
 import com.cloud_storage.service.MinioService;
@@ -41,7 +42,7 @@ public class UserController {
     @PostMapping
     public String create(@ModelAttribute("user") LoginDto loginDto,
                          HttpServletRequest httpServletRequest,
-                         Model model) throws ServletException {
+                         Model model) throws ServletException, MinioException {
         try {
             UserReadDto user = userService.save(loginDto);
             String folderName = "user-" +user.getId()+ "-files/";
@@ -59,7 +60,7 @@ public class UserController {
 
     @DeleteMapping
     public String delete(@AuthenticationPrincipal UserPrincipal userPrincipal,
-                         HttpSession session) {
+                         HttpSession session) throws MinioException {
         String folderName = "user-" +userPrincipal.getId()+ "-files/";
 
         minioService.deleteFolder(folderName);
