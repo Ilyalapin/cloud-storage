@@ -1,4 +1,4 @@
-package com.cloud_storage.common;
+package com.cloud_storage.common.util;
 
 import com.cloud_storage.dto.UserCreateDto;
 import com.cloud_storage.dto.UserReadDto;

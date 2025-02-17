@@ -128,7 +128,7 @@ body {
 }
 
 /*USER-PAGE*/
-.container-center-user-page, .container-center-home {
+.container-center-home, .container-center-user-page {
     width: 1717px;
     height: 730px;
     background-color: whitesmoke;
@@ -195,13 +195,6 @@ body {
     border: 1px solid #696969;
     font-size: 20px;
 }
-.buttons{
-    padding-left: 5px;
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 10px;
-    margin-right: 50px;
-}
 
 .col-md-5 {
     display: flex;
@@ -222,7 +215,6 @@ h4 {
 }
 
 .folder img, .file img {
-    margin-left: 100px;
     margin-top: 10px;
 }
 .folder img{
@@ -235,13 +227,53 @@ h4 {
 }
 .folder, .file {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
+    align-items: center;
 }
 
-.folder b {
+.home-directory a{
+    color: black;
+    font-size: 20px;
+}
+
+
+.folder-name, .file-name {
+    margin-left: 10px;
     margin-top: 10px;
-    margin-left: 204px;
+    font-size: 20px;
+    color: #696969;
+    text-decoration: none;
+}
+
+.folder-name:hover {
+    text-decoration: underline;
+    color: black;
+}
+.folder-size, .file-size {
+    display: block;
+    align-items: center;
+    margin-left: 350px;
+}
+.buttons{
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+        padding-left: 5px;
+}
+.folder-buttons, .file-buttons{
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 50px;
+    margin-bottom: 9px;
+}
+
+.row6{
+    display: flex;
+    align-items: center;
+}
+
+.folder-icon, .file-icon {
+    margin-left: 100px;
+    margin-bottom: 10px;
 }
 
 

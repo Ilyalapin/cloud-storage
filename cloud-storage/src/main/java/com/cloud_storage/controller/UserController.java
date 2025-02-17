@@ -3,7 +3,6 @@ package com.cloud_storage.controller;
 import com.cloud_storage.common.UserPrincipal;
 import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.dto.LoginDto;
-import com.cloud_storage.dto.UserReadDto;
 import com.cloud_storage.service.MinioService;
 import com.cloud_storage.service.UserService;
 import jakarta.servlet.ServletException;
@@ -39,18 +38,17 @@ public class UserController {
         return "sign-up";
     }
 
+
     @PostMapping
     public String create(@ModelAttribute("user") LoginDto loginDto,
                          HttpServletRequest httpServletRequest,
-                         Model model) throws ServletException, MinioException {
+                         Model model) throws ServletException {
         try {
-            UserReadDto user = userService.save(loginDto);
-            String folderName = "user-" +user.getId()+ "-files/";
-
-            minioService.createFolder(folderName);
+            userService.save(loginDto);
 
             httpServletRequest.login(loginDto.getUsername(), loginDto.getPassword());
-            return "redirect:/storage/user-page";
+
+            return "redirect:/storage";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "/sign-up";
@@ -61,7 +59,7 @@ public class UserController {
     @DeleteMapping
     public String delete(@AuthenticationPrincipal UserPrincipal userPrincipal,
                          HttpSession session) throws MinioException {
-        String folderName = "user-" +userPrincipal.getId()+ "-files/";
+        String folderName = "user-" + userPrincipal.getId() + "-files/";
 
         minioService.deleteFolder(folderName);
 

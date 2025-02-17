@@ -23,7 +23,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .formLogin(login -> login
                         .loginPage("/user/sign-in")
-                        .defaultSuccessUrl("/storage/user-page", true)
+                        .defaultSuccessUrl("/storage", true)
                         .failureUrl("/sign-in?error=true")
                         .permitAll())
                 .logout(logout -> logout

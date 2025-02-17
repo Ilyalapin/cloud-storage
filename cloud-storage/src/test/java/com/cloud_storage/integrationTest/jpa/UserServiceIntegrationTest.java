@@ -5,6 +5,7 @@ import com.cloud_storage.common.exception.UserNotFoundException;
 import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.dto.UserReadDto;
 import com.cloud_storage.entity.User;
+import com.cloud_storage.integrationTest.config.UserServiceTestConfig;
 import com.cloud_storage.repository.UserRepository;
 import com.cloud_storage.service.UserService;
 import org.junit.jupiter.api.Assertions;
@@ -23,7 +24,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 @DataJpaTest
-@ContextConfiguration(classes = TestConfig.class)
+@ContextConfiguration(classes = UserServiceTestConfig.class)
 public class UserServiceIntegrationTest {
     private final String username = "test1";
     private final String password = "123";

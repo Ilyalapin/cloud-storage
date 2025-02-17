@@ -1,6 +1,6 @@
 package com.cloud_storage.service;
 
-import com.cloud_storage.common.MapingUtil;
+import com.cloud_storage.common.util.MapingUtil;
 import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.UserAlreadyExistException;
 import com.cloud_storage.common.exception.UserNotFoundException;

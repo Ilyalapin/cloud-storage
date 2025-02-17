@@ -31,8 +31,6 @@ public class ExceptionHandlingFilter extends HttpFilter {
             writeErrorResponse(res, SC_NOT_FOUND, e);
         } catch (InvalidParameterException e) {
             writeErrorResponse(res, SC_BAD_REQUEST, e);
-        } catch (MinioException e) {
-            writeErrorResponse(res, SC_INTERNAL_SERVER_ERROR, e);
         }
     }
 
