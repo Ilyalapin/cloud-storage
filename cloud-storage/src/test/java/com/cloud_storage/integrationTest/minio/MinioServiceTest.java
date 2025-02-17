@@ -7,6 +7,8 @@ import io.minio.MinioClient;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.test.context.*;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.MinIOContainer;
