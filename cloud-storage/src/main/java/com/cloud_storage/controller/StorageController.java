@@ -47,6 +47,9 @@ public class StorageController {
         model.addAttribute("objects", objects);
         redirectAttributes.addFlashAttribute("rootFolder", rootFolder);
 
+        model.addAttribute("path", PrefixGenerationUtil.getBackPath(path));
+        model.addAttribute("links", PrefixGenerationUtil.generateFromDirectory(path,rootFolder));
+
         return "storage";
     }
 

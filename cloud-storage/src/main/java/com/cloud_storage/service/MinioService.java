@@ -59,7 +59,7 @@ public class MinioService {
     public ObjectReadDto createRootFolder(String folderName, String path) throws MinioException {
         try {
             log.trace("Creating folder in bucket: {}, folderName: {}", BUCKET_NAME, folderName);
-            if (!isExist(BUCKET_NAME,folderName,path)) {
+            if (!isExist(BUCKET_NAME,folderName)) {
                 minioClient.putObject(PutObjectArgs.builder()
                         .bucket(BUCKET_NAME)
                         .object(path + folderName + "/")
@@ -70,13 +70,14 @@ public class MinioService {
             return new ObjectReadDto(
                     folderName,
                     true,
-                    path + folderName + "/"
+                    path + folderName
             );
 
         } catch (Exception e) {
             throw new MinioException("Error to create a folder", e);
         }
     }
+
 
     public ObjectReadDto createFolder(String folderName, String path) throws MinioException {
         try {
@@ -110,7 +111,6 @@ public class MinioService {
                         .build());
     }
 
-
     public List<ObjectReadDto> getObjects(String path) throws MinioException {
         Iterable<Result<Item>> items = findObjects(BUCKET_NAME, path, path);
 
@@ -118,7 +118,7 @@ public class MinioService {
         for (Result<Item> item : items) {
             try {
                 ObjectReadDto object = new ObjectReadDto(
-                        PrefixGenerationUtil.generateFolderNameforView(item.get().objectName()),
+                        PrefixGenerationUtil.generateFolderNameForView(item.get().objectName()),
                         item.get().isDir(),
                         path);
 
@@ -131,7 +131,8 @@ public class MinioService {
     }
 
 
-    public boolean isExist(String bucketName, String folderName, String path) throws MinioException {
+
+    public boolean isExist(String bucketName, String folderName) throws MinioException {
         try {
             log.trace("Checking if folder exists in bucket: {}, folderName: {}", bucketName, folderName);
             minioClient.statObject(StatObjectArgs.builder()

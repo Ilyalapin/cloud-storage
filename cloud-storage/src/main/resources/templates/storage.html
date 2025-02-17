@@ -123,28 +123,22 @@
         <span th:text="${error}"></span>
     </div>
 
-    <h2 th:if="${objects.isEmpty()}" class="text-center mt-4">This folder is empty</h2>
-    <div class="container-center-user-page" th:unless="${objects.isEmpty()}">
+    <div class="container-center-user-page">
+        <h2 th:if="${objects.isEmpty()}" class="text-center mt-4">This folder is empty</h2>
 
-        <div class="home-directory">
-<!--            <a th:href="@{/storage/user-page(path=${rootFolder.getPath()})}" th:text="'Home/'"></a>-->
-        </div>
+                <nav aria-label="breadcrumb" class="mb-4" >
+                    <ol class="breadcrumb fs-4">
+                        <li class="home-directory">
+                            <a th:href="@{/storage}" th:text="'Home/'"></a>
+                        </li>
+                        <li class="home-directory" th:each="object : ${objects}" th:if="${!path.isEmpty()}">
+                            <a th:href="@{/storage(path=${path})}"
+                               th:text="${links}"></a>
+                        </li>
+                    </ol>
+                </nav>
 
-        <!--        <nav aria-label="breadcrumb" class="mb-4" >-->
-        <!--            <ol class="breadcrumb fs-4">-->
-        <!--                <li class="home-directory">-->
-        <!--                    <a th:href="@{/storage/user-page(path=${parentFolder.getPath()})}" th:text="'Home/'"></a>-->
-        <!--                </li>-->
-        <!--                <li class="home-directory" th:each="link, iterStat : ${links}"-->
-        <!--                    th:if="${!#strings.isEmpty(link)}">-->
-        <!--                    <a th:class="${iterStat.last ? 'links active' : 'links'}"-->
-        <!--                       th:href="${link}"-->
-        <!--                       th:text="${folderLink[iterStat.index]}"></a>-->
-        <!--                </li>-->
-        <!--            </ol>-->
-        <!--        </nav>-->
-
-        <div class="row">
+        <div class="row" th:unless="${objects.isEmpty()}">
             <div class="col-md-5">
                 <h4>Name</h4>
             </div>
@@ -157,42 +151,43 @@
             </div>
         </div>
 
-        <div class="line">
+        <div class="line" th:unless="${objects.isEmpty()}">
         </div>
 
         <form action="/storage" method="get">
-            <div class="row66"th:block th:each="object : ${objects}">
+            <div class="row66" th:block th:each="object : ${objects}">
 
                 <!--            Folder view-->
                 <div class="folder-view" th:if="${object.isDir()}">
 
-                            <div class="row6">
-                                <div class="col-md-4">
+                    <div class="row6">
+                        <div class="col-md-4">
 
-                                    <div class="folder">
+                            <div class="folder">
 
-                                        <img src="/image/folder.png" alt="folder" class="folder-icon">
-                                        <a th:href="@{/storage(path=${object.getName()+'/'})}" class="folder-name"
-                                           th:text="${object.getName()}"></a>
+                                <img src="/image/folder.png" alt="folder" class="folder-icon">
+                                <a th:href="@{/storage(path=${object.getPath()+object.getName()+'/'})}"
+                                   class="folder-name"
+                                   th:text="${object.getName()}"></a>
 
-                                        <input type="hidden" name="path" th:value="${object.getPath()}">
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-4">
-                                    <b class="folder-size">-</b>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="folder-buttons">
-                                        <th:block th:replace="~{fragment/buttons :: buttons}"></th:block>
-                                    </div>
-                                </div>
+                                <input type="hidden" name="path" th:value="${object.getPath()}">
                             </div>
 
-                            <div class="line">
+                        </div>
+
+                        <div class="col-md-4">
+                            <b class="folder-size">-</b>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="folder-buttons">
+                                <th:block th:replace="~{fragment/buttons :: buttons}"></th:block>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="line">
+                    </div>
                 </div>
 
 
