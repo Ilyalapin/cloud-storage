@@ -126,17 +126,16 @@
     <div class="container-center-user-page">
         <h2 th:if="${objects.isEmpty()}" class="text-center mt-4">This folder is empty</h2>
 
-                <nav aria-label="breadcrumb" class="mb-4" >
-                    <ol class="breadcrumb fs-4">
-                        <li class="home-directory">
-                            <a th:href="@{/storage}" th:text="'Home/'"></a>
-                        </li>
-                        <li class="home-directory" th:each="object : ${objects}" th:if="${!path.isEmpty()}">
-                            <a th:href="@{/storage(path=${path})}"
-                               th:text="${links}"></a>
-                        </li>
-                    </ol>
-                </nav>
+        <nav aria-label="breadcrumb" class="mb-4" >
+            <ol class="breadcrumb fs-4">
+                <li class="home-directory">
+                    <a th:href="@{/storage}" th:text="'Home/'"></a>
+                </li>
+                <li class="home-directory" th:if="${!path.isEmpty()}">
+                    <a th:href="@{/storage(path=${path})}" th:text="${links}"></a>
+                </li>
+            </ol>
+        </nav>
 
         <div class="row" th:unless="${objects.isEmpty()}">
             <div class="col-md-5">
@@ -164,13 +163,10 @@
                         <div class="col-md-4">
 
                             <div class="folder">
-
                                 <img src="/image/folder.png" alt="folder" class="folder-icon">
                                 <a th:href="@{/storage(path=${object.getPath()+object.getName()+'/'})}"
                                    class="folder-name"
                                    th:text="${object.getName()}"></a>
-
-                                <input type="hidden" name="path" th:value="${object.getPath()}">
                             </div>
 
                         </div>
@@ -181,7 +177,41 @@
 
                         <div class="col-md-4">
                             <div class="folder-buttons">
-                                <th:block th:replace="~{fragment/buttons :: buttons}"></th:block>
+<!--                                <th:block th:replace="~{fragment/buttons :: buttons}"></th:block>-->
+                                <div class="buttons">
+                                    <a href="#" type="button" class="btn btn-outline-secondary btn-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                             class="bi bi-download" viewBox="0 0 16 16">
+                                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"></path>
+                                            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"></path>
+                                        </svg>
+                                    </a>
+
+                                    <!--    Three dots with dropdown-->
+                                    <div class="dropdown ps-3">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="dropdown">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                                 class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                                                <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                                            </svg>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a href="#" class="dropdown-item">Move</a></li>
+                                            <li><a href="#" class="dropdown-item">Rename</a></li>
+                                            <li>
+<!--                                                <form th:action="@{/storage/deleteFolder}" th:method="POST">-->
+                                                <form th:action="@{/storage/deleteFolder}" th:method="Delete">
+<!--                                                    <input type="hidden" name="_method" value="delete"/>-->
+                                                    <input name="path" th:value="${param.path}" type="hidden">
+                                                    <input type="hidden" name="folderName" th:value="${object.getName()}">
+                                                    <button type="submit" class="dropdown-item btn text-danger">Delete</button>
+
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>

@@ -65,4 +65,24 @@ public class StorageController {
 
         return "redirect:/storage?path=" + objectCreateDto.getPath();
     }
+
+
+    @DeleteMapping("/deleteFolder")
+    public String deleteFolder(@ModelAttribute("rootFolder") ObjectReadDto rootFolder,
+                               @RequestParam(required = false) String path,
+                               @RequestParam String folderName) throws MinioException {
+
+        try {
+            log.info("Attempting to delete folder: {}", path);
+
+//            minioService.deleteObject(PrefixGenerationUtil.generateForDeleteObject(path,folderName,rootFolder));
+            minioService.deleteObject(path+folderName+"/");
+                log.info("Folder deleted successfully");
+
+        } catch (Exception e) {
+            log.error("Error deleting folder: {}", e.getMessage());
+            throw new MinioException("Error deleting folder", e);
+        }
+        return "redirect:/storage?path=" + path;
+    }
 }

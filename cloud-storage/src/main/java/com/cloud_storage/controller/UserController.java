@@ -61,7 +61,7 @@ public class UserController {
                          HttpSession session) throws MinioException {
         String folderName = "user-" + userPrincipal.getId() + "-files/";
 
-        minioService.deleteFolder(folderName);
+//        minioService.deleteFolder(folderName);
 
         userService.delete(userPrincipal.getUsername());
         session.invalidate();

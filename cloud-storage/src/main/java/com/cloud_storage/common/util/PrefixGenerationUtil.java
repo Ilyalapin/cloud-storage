@@ -41,4 +41,11 @@ public class PrefixGenerationUtil {
 
         return obJectName.substring(firstSlashIndex + 1);
     }
+
+    public static String generateForDeleteObject(String path,String obJectName,ObjectReadDto folderDto) {
+        if (obJectName == null || obJectName.isEmpty()) {
+            return folderDto.getName();
+        }
+        return path+obJectName+"/";
+    }
 }

@@ -78,4 +78,20 @@ public class MinioServiceTest {
         Assertions.assertTrue(objects.get(0).isDir());
         Assertions.assertTrue(objects.get(1).isDir());
     }
+
+
+    @Test
+    void deleteFolder() throws Exception {
+        String rootFolderName = "user-1000-files";
+        String pathRootFolder = "/";
+        ObjectReadDto rootFolder = minioService.createFolder(rootFolderName, pathRootFolder);
+
+        String name1 = "photo";
+        String name2 = "video";
+        String path = rootFolder.getPath();
+
+        ObjectReadDto newFolder1 = minioService.createFolder(name1, path);
+        ObjectReadDto newFolder2 = minioService.createFolder(name2, newFolder1.getPath());
+//        minioService.deleteFolder(name2+"/");
+    }
 }
