@@ -28,7 +28,7 @@ public class MinioService {
     private final MinioClient minioClient;
 
 
-    private static final String BUCKET_NAME = "user-files";
+    private static final String BUCKET_NAME = "user-data";
 
 
     @PostConstruct
@@ -155,45 +155,117 @@ public class MinioService {
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     /**
-     * Метод удаляет все файлы в директории, указанной в префиксе.
+     * Метод удаляет один объект из хранилища MinIO по заданному пути.
      */
-    public void deleteFolder(String folderName) throws MinioException {
-        try {
-            Iterable<Result<Item>> objects = minioClient.listObjects(ListObjectsArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .prefix(folderName)
-                    .build());
-
-            for (Result<Item> result : objects) {
-                Item item = result.get();
-                minioClient.removeObject(RemoveObjectArgs.builder()
-                        .bucket(BUCKET_NAME)
-                        .object(item.objectName())
-                        .build());
-                log.info("Deleted object: {}", item.objectName());
-            }
-            log.info("User folder {} deleted successfully", folderName);
-        } catch (Exception e) {
-            throw new MinioException("Error to delete a folder", e);
-        }
-    }
-
-    /**
-     * Метод предназначен для удаления одного объекта из хранилища MinIO по заданному пути.
-     */
-    public void deleteFile(Path source) throws MinioException {
+    public void deleteObject(String path) throws MinioException {
         try {
             RemoveObjectArgs args = RemoveObjectArgs.builder()
                     .bucket(BUCKET_NAME)
-                    .object(source.toString())
+                    .object(path)
                     .build();
             minioClient.removeObject(args);
         } catch (Exception e) {
             throw new MinioException("Error while fetching files in Minio", e);
         }
     }
+
+    /**
+     * Метод удаляет все файлы в директории, указанной в префиксе.
+     */
+    public void deleteAllInFolder(String folderName) throws MinioException {
+        try {
+
+            Iterable<Result<Item>> objects = getAllInFolder(folderName);
+
+            boolean hasObjects = false;
+
+            for (Result<Item> result : objects) {
+                hasObjects = true;
+                Item item = result.get();
+
+                minioClient.removeObject(RemoveObjectArgs.builder()
+                        .bucket(BUCKET_NAME)
+                        .object(item.objectName())
+                        .build());
+                log.info("Deleted object: {}", item.objectName());
+
+            }
+            if (!hasObjects) {
+                log.info("No objects found in folder: {}", folderName);
+            }
+            log.info("User folder {} deleted successfully", folderName);
+
+        } catch (Exception e) {
+            throw new MinioException("Error to delete a folder", e);
+        }
+    }
+
+
+    private Iterable<Result<Item>> getAllInFolder(String folderName) throws MinioException {
+        try {
+            // Проверяем наличие объектов в папке
+            return minioClient.listObjects(ListObjectsArgs.builder()
+                    .bucket(BUCKET_NAME)
+                    .prefix(folderName)
+                    .startAfter(folderName)
+                    .build());
+        } catch (Exception e) {
+            throw new MinioException("Error while listing objects in folder: " + folderName, e);
+        }
+    }
+
+    //    public void deleteAllInFolder(String folderName) throws MinioException {
+//        try {
+//
+//            // Проверяем наличие объектов в папке
+//            Iterable<Result<Item>> objects = minioClient.listObjects(ListObjectsArgs.builder()
+//                    .bucket(BUCKET_NAME)
+//                    .prefix(folderName)
+//                    .startAfter(folderName)
+//                    .build());
+//
+//            boolean hasObjects = false;
+//
+//            for (Result<Item> result : objects) {
+//                hasObjects = true;
+//                Item item = result.get();
+//
+//                    minioClient.removeObject(RemoveObjectArgs.builder()
+//                            .bucket(BUCKET_NAME)
+//                            .object(item.objectName())
+//                            .build());
+//                    log.info("Deleted object: {}", item.objectName());
+//
+//            }
+//            if (!hasObjects) {
+//                log.info("No objects found in folder: {}", folderName);
+//            }
+//                log.info("User folder {} deleted successfully", folderName);
+//
+//        } catch (Exception e) {
+//            throw new MinioException("Error to delete a folder", e);
+//        }
+//    }
+
+//    public void removeEmptyFolder(String folderName) throws MinioException {
+//        try {
+//            String keepFileName = folderName.endsWith("/") ? folderName + ".keep" : folderName + "/.keep";
+//
+//            // Удаляем пустой файл, чтобы "удалить" папку
+//            minioClient.removeObject(RemoveObjectArgs.builder()
+//                    .bucket(BUCKET_NAME)
+//                    .object(keepFileName)
+//                    .build());
+//            log.info("Removed empty marker file: {}", keepFileName);
+//
+//        } catch (Exception e) {
+//            throw new MinioException("Error to remove empty folder", e);
+//        }
+//    }
+
+
+
 
     /**
      * Когда использовать:
