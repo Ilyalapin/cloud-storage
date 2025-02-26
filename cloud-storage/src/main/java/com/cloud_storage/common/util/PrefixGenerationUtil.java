@@ -11,6 +11,7 @@ public class PrefixGenerationUtil {
         return path;
     }
 
+
     public static String getBackPath(String obJectName) {
         if (obJectName.isEmpty()) return "";
         obJectName = obJectName.substring(0, obJectName.lastIndexOf('/'));

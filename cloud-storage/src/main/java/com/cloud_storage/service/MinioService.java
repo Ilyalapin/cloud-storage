@@ -26,15 +26,13 @@ import java.util.stream.StreamSupport;
 @Service
 public class MinioService {
     private final MinioClient minioClient;
-
-
-    private static final String BUCKET_NAME = "user-data";
-
+    private static final String BUCKET_NAME = "user-files";
 
     @PostConstruct
     public void init() {
         try {
             createBucketIfNotExists();
+
         } catch (Exception e) {
             log.error("Ошибка при инициализации MinioService: " + e.getMessage());
         }
@@ -59,10 +57,10 @@ public class MinioService {
     public ObjectReadDto createRootFolder(String folderName, String path) throws MinioException {
         try {
             log.trace("Creating folder in bucket: {}, folderName: {}", BUCKET_NAME, folderName);
-            if (!isExist(BUCKET_NAME,folderName)) {
+            if (!isExist(BUCKET_NAME, folderName)) {
                 minioClient.putObject(PutObjectArgs.builder()
                         .bucket(BUCKET_NAME)
-                        .object(path + folderName + "/")
+                        .object(folderName + "/")
                         .stream(new ByteArrayInputStream(new byte[]{}), 0, -1)
                         .build());
                 log.info("Folder:{} created successfully", folderName);
@@ -72,7 +70,6 @@ public class MinioService {
                     true,
                     path + folderName
             );
-
         } catch (Exception e) {
             throw new MinioException("Error to create a folder", e);
         }
@@ -81,40 +78,39 @@ public class MinioService {
 
     public ObjectReadDto createFolder(String folderName, String path) throws MinioException {
         try {
-            log.trace("Creating folder in bucket: {}, folderName: {}", BUCKET_NAME, folderName);
-                minioClient.putObject(PutObjectArgs.builder()
-                        .bucket(BUCKET_NAME)
-                        .object(path + folderName + "/")
-                        .stream(new ByteArrayInputStream(new byte[]{}), 0, -1)
-                        .build());
-                log.info("Folder:{} created successfully", folderName);
-                return new ObjectReadDto(
-                        folderName,
-                        true,
-                        path + folderName + "/"
+            log.info("Creating folder with name: {}", folderName);
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(BUCKET_NAME)
+                    .object(path + folderName + "/")
+                    .stream(new ByteArrayInputStream(new byte[]{}), 0, -1)
+                    .build());
+            log.trace("Folder:{} created successfully", folderName);
+            return new ObjectReadDto(
+                    folderName,
+                    true,
+                    path + folderName + "/"
 //                    getSize(path)
-                );
-
+            );
         } catch (Exception e) {
             throw new MinioException("Error to create a folder", e);
         }
     }
 
 
-    public Iterable<Result<Item>> findObjects(String bucketName, String folderName, String path) {
+    public Iterable<Result<Item>> findObjects(String bucketName, String path) {
         return minioClient.listObjects(
                 ListObjectsArgs.builder()
                         .bucket(bucketName)
-                        .startAfter(folderName)
+                        .startAfter(path)
                         .prefix(path)
-                        .maxKeys(100)
                         .build());
     }
 
-    public List<ObjectReadDto> getObjects(String path) throws MinioException {
-        Iterable<Result<Item>> items = findObjects(BUCKET_NAME, path, path);
 
-        List<ObjectReadDto> result = new ArrayList<ObjectReadDto>();
+    public List<ObjectReadDto> getObjects(String path) throws MinioException {
+        Iterable<Result<Item>> items = findObjects(BUCKET_NAME, path);
+
+        List<ObjectReadDto> result = new ArrayList<>();
         for (Result<Item> item : items) {
             try {
                 ObjectReadDto object = new ObjectReadDto(
@@ -131,15 +127,13 @@ public class MinioService {
     }
 
 
-
     public boolean isExist(String bucketName, String folderName) throws MinioException {
         try {
             log.trace("Checking if folder exists in bucket: {}, folderName: {}", bucketName, folderName);
             minioClient.statObject(StatObjectArgs.builder()
                     .bucket(bucketName)
-                    .object(folderName+"/")
+                    .object(folderName + "/")
                     .build());
-            log.info("Folder:{} already exists", folderName);
             return true;
         } catch (ErrorResponseException e) {
             if (e.getMessage().contains("Object does not exist")) {
@@ -154,19 +148,20 @@ public class MinioService {
     }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Метод удаляет один объект из хранилища MinIO по заданному пути.
-     */
     public void deleteObject(String path) throws MinioException {
-        try {
-            RemoveObjectArgs args = RemoveObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(path)
-                    .build();
-            minioClient.removeObject(args);
-        } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
+        Iterable<Result<Item>> objects = getAllInFolder(path);
+        if (!objects.iterator().hasNext()) {
+            deleteEmptyObject(path);
+        } else {
+            for (Result<Item> item : objects) {
+                try {
+                    deleteAllInFolder(item.get().objectName());
+                    deleteEmptyObject(item.get().objectName());
+                } catch (Exception e) {
+                    throw new MinioException("Error while receiving the files", e);
+                }
+            }
+            deleteEmptyObject(path);
         }
     }
 
@@ -175,36 +170,45 @@ public class MinioService {
      */
     public void deleteAllInFolder(String folderName) throws MinioException {
         try {
-
             Iterable<Result<Item>> objects = getAllInFolder(folderName);
 
-            boolean hasObjects = false;
-
             for (Result<Item> result : objects) {
-                hasObjects = true;
                 Item item = result.get();
 
-                minioClient.removeObject(RemoveObjectArgs.builder()
-                        .bucket(BUCKET_NAME)
-                        .object(item.objectName())
-                        .build());
-                log.info("Deleted object: {}", item.objectName());
-
+                if (!item.isDir()) {
+                    deleteEmptyObject(item.objectName());
+                    log.info("Deleted object: {}", item.objectName());
+                } else {
+                    deleteAllInFolder(item.objectName());
+                }
             }
-            if (!hasObjects) {
-                log.info("No objects found in folder: {}", folderName);
-            }
-            log.info("User folder {} deleted successfully", folderName);
-
+            deleteEmptyObject(folderName);
+                log.info("Deleted folder: {}", folderName);
         } catch (Exception e) {
-            throw new MinioException("Error to delete a folder", e);
+            throw new MinioException("Error while deleting folder: " + folderName, e);
+        }
+    }
+
+
+    /**
+     * Метод удаляет один объект из хранилища MinIO по заданному пути.
+     */
+    public void deleteEmptyObject(String path) throws MinioException {
+        try {
+            RemoveObjectArgs args = RemoveObjectArgs.builder()
+                    .bucket(BUCKET_NAME)
+                    .object(path)
+                    .build();
+            minioClient.removeObject(args);
+            log.info("Folder:{} deleted successfully", path);
+        } catch (Exception e) {
+            throw new MinioException("Error while fetching files in Minio", e);
         }
     }
 
 
     private Iterable<Result<Item>> getAllInFolder(String folderName) throws MinioException {
         try {
-            // Проверяем наличие объектов в папке
             return minioClient.listObjects(ListObjectsArgs.builder()
                     .bucket(BUCKET_NAME)
                     .prefix(folderName)
@@ -214,59 +218,7 @@ public class MinioService {
             throw new MinioException("Error while listing objects in folder: " + folderName, e);
         }
     }
-
-    //    public void deleteAllInFolder(String folderName) throws MinioException {
-//        try {
-//
-//            // Проверяем наличие объектов в папке
-//            Iterable<Result<Item>> objects = minioClient.listObjects(ListObjectsArgs.builder()
-//                    .bucket(BUCKET_NAME)
-//                    .prefix(folderName)
-//                    .startAfter(folderName)
-//                    .build());
-//
-//            boolean hasObjects = false;
-//
-//            for (Result<Item> result : objects) {
-//                hasObjects = true;
-//                Item item = result.get();
-//
-//                    minioClient.removeObject(RemoveObjectArgs.builder()
-//                            .bucket(BUCKET_NAME)
-//                            .object(item.objectName())
-//                            .build());
-//                    log.info("Deleted object: {}", item.objectName());
-//
-//            }
-//            if (!hasObjects) {
-//                log.info("No objects found in folder: {}", folderName);
-//            }
-//                log.info("User folder {} deleted successfully", folderName);
-//
-//        } catch (Exception e) {
-//            throw new MinioException("Error to delete a folder", e);
-//        }
-//    }
-
-//    public void removeEmptyFolder(String folderName) throws MinioException {
-//        try {
-//            String keepFileName = folderName.endsWith("/") ? folderName + ".keep" : folderName + "/.keep";
-//
-//            // Удаляем пустой файл, чтобы "удалить" папку
-//            minioClient.removeObject(RemoveObjectArgs.builder()
-//                    .bucket(BUCKET_NAME)
-//                    .object(keepFileName)
-//                    .build());
-//            log.info("Removed empty marker file: {}", keepFileName);
-//
-//        } catch (Exception e) {
-//            throw new MinioException("Error to remove empty folder", e);
-//        }
-//    }
-
-
-
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
      * Когда использовать:
      * • Если нужно получить только объекты на верхнем уровне в бакете и я не хочу, чтобы результат включал вложенные объекты или папки.
@@ -313,15 +265,15 @@ public class MinioService {
      * и ничего более. То есть если в заданной директории будет лежать папка фотографии и 2 файла, то этот метод покажет это все и
      * не покажет содержимое папки фотографии
      */
-    public List<Item> list(String path, boolean isRecursive) {
-        ListObjectsArgs args = ListObjectsArgs.builder()
-                .bucket(BUCKET_NAME)
-                .prefix(path)
-                .recursive(isRecursive)
-                .build();
-        Iterable<Result<Item>> myObjects = minioClient.listObjects(args);
-        return getItems(myObjects);
-    }
+//    public List<Item> list(String path, boolean isRecursive) {
+//        ListObjectsArgs args = ListObjectsArgs.builder()
+//                .bucket(BUCKET_NAME)
+//                .prefix(path)
+//                .recursive(isRecursive)
+//                .build();
+//        Iterable<Result<Item>> myObjects = minioClient.listObjects(args);
+//        return getItems(myObjects);
+//    }
 
 
     /**
