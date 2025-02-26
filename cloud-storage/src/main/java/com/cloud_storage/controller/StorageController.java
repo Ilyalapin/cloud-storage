@@ -3,6 +3,7 @@ package com.cloud_storage.controller;
 import com.cloud_storage.common.UserPrincipal;
 import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
+import com.cloud_storage.dto.FolderDeleteDto;
 import com.cloud_storage.dto.ObjectCreateDto;
 import com.cloud_storage.dto.ObjectReadDto;
 import com.cloud_storage.service.MinioService;
@@ -29,26 +30,22 @@ public class StorageController {
     }
 
 
-@GetMapping
+    @GetMapping
     public String showContentsOfFolder(@AuthenticationPrincipal UserPrincipal userPrincipal,
-                               @RequestParam(value = "path", required = false, defaultValue = "") String path,
-                               RedirectAttributes redirectAttributes,
-                               Model model) throws Exception {
-
-        String folderName = "user-" + userPrincipal.getId() + "-files/";
-
-        log.info("Creating root folder in bucket, folderName: {}", folderName);
-        ObjectReadDto rootFolder = minioService.createRootFolder(folderName, "/");
+                                       @RequestParam(value = "path", required = false, defaultValue = "") String path,
+                                       RedirectAttributes redirectAttributes,
+                                       Model model) throws Exception {
+        ObjectReadDto rootFolder = minioService.createRootFolder("user-"+userPrincipal.getId()+"-files/", "/");
 
         List<ObjectReadDto> objects = minioService.getObjects(PrefixGenerationUtil.generatePath(path, rootFolder));
 
+        redirectAttributes.addFlashAttribute("rootFolder", rootFolder);
         model.addAttribute("userInfo", userPrincipal.getRole() + ": " + userPrincipal.getUsername());
         model.addAttribute("objectCreateDto", new ObjectCreateDto("", PrefixGenerationUtil.generatePath(path, rootFolder)));
         model.addAttribute("objects", objects);
-        redirectAttributes.addFlashAttribute("rootFolder", rootFolder);
-
+        model.addAttribute("folderDeleteDto", new FolderDeleteDto());
         model.addAttribute("path", PrefixGenerationUtil.getBackPath(path));
-        model.addAttribute("links", PrefixGenerationUtil.generateFromDirectory(path,rootFolder));
+        model.addAttribute("links", PrefixGenerationUtil.generateFromDirectory(path, rootFolder));
 
         return "storage";
     }
@@ -56,33 +53,27 @@ public class StorageController {
 
     @PostMapping
     public String createFolder(@RequestParam(required = false) String path,
-                               @ModelAttribute("objectCreateDto") ObjectCreateDto objectCreateDto,
-                               RedirectAttributes redirectAttributes) throws MinioException {
+                               @ModelAttribute("objectCreateDto") ObjectCreateDto objectCreateDto) throws MinioException {
         log.info("Creating new folder, folderName: {}, path: {}", objectCreateDto.getName(), path);
         objectCreateDto.setPath(path);
         ObjectReadDto newFolder = minioService.createFolder(objectCreateDto.getName(), objectCreateDto.getPath());
-        redirectAttributes.addFlashAttribute("newFolder", newFolder);
+        log.info("Folder created: {}", newFolder);
 
         return "redirect:/storage?path=" + objectCreateDto.getPath();
     }
 
 
     @DeleteMapping("/deleteFolder")
-    public String deleteFolder(@ModelAttribute("rootFolder") ObjectReadDto rootFolder,
-                               @RequestParam(required = false) String path,
-                               @RequestParam String folderName) throws MinioException {
-
+    public String deleteFolder(@ModelAttribute("folderDeleteDto") FolderDeleteDto folderDeleteDto) throws MinioException {
         try {
-            log.info("Attempting to delete folder: {}", path);
+            log.info("Attempting to delete folder: {}", folderDeleteDto.getFolderName());
+            minioService.deleteObject(folderDeleteDto.getPath() + folderDeleteDto.getFolderName() + "/");
 
-//            minioService.deleteObject(PrefixGenerationUtil.generateForDeleteObject(path,folderName,rootFolder));
-            minioService.deleteObject(path+folderName+"/");
-                log.info("Folder deleted successfully");
-
+            log.info("Folder with name:{} deleted successfully", folderDeleteDto.getFolderName());
         } catch (Exception e) {
             log.error("Error deleting folder: {}", e.getMessage());
             throw new MinioException("Error deleting folder", e);
         }
-        return "redirect:/storage?path=" + path;
+        return "redirect:/storage?path=" + folderDeleteDto.getPath();
     }
 }

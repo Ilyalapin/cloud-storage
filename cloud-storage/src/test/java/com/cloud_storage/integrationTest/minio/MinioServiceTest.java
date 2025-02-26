@@ -7,8 +7,6 @@ import io.minio.MinioClient;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.test.context.*;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.MinIOContainer;
@@ -51,7 +49,7 @@ public class MinioServiceTest {
 
     @Test
     void getObjects() throws Exception {
-        String rootFolderName = "user-1000-files/";
+        String rootFolderName = "user-1002-files/";
         String pathRootFolder = "/";
 
         ObjectReadDto rootFolder = minioService.createFolder(rootFolderName, pathRootFolder);
@@ -81,17 +79,34 @@ public class MinioServiceTest {
 
 
     @Test
-    void deleteFolder() throws Exception {
-        String rootFolderName = "user-1000-files";
+    void deleteObject() throws Exception {
+        String rootFolderName = "user-162-files";
         String pathRootFolder = "/";
-        ObjectReadDto rootFolder = minioService.createFolder(rootFolderName, pathRootFolder);
+        minioService.createFolder(rootFolderName, pathRootFolder);
 
-        String name1 = "photo";
-        String name2 = "video";
-        String path = rootFolder.getPath();
+        String name = "test";
+        String name1 = "1";
+        String name2 = "2";
+        String name3 = "3";
 
-        ObjectReadDto newFolder1 = minioService.createFolder(name1, path);
-        ObjectReadDto newFolder2 = minioService.createFolder(name2, newFolder1.getPath());
-//        minioService.deleteFolder(name2+"/");
+        String path = rootFolderName+"/";
+
+        String path1 = path+name+"/";
+        String path2 = path1+name2+"/";
+
+        minioService.createFolder(name, path);
+        List<ObjectReadDto> objects1 = minioService.getObjects( path);
+        Assertions.assertEquals(1, objects1.size());
+
+        minioService.createFolder(name1, path1);
+        minioService.createFolder(name2, path1);
+        List<ObjectReadDto> objects2 = minioService.getObjects(path1);
+        Assertions.assertEquals(2, objects2.size());
+
+        minioService.createFolder(name3, path2);
+
+        minioService.deleteObject(path1);
+        List<ObjectReadDto> objects3 = minioService.getObjects(path);
+        Assertions.assertEquals(0, objects3.size());
     }
 }
