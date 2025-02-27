@@ -119,9 +119,6 @@
         </form>
     </div>
 
-<!--    <div class="error" th:if="${error}" style="color: red;">-->
-<!--        <span th:text="${error}"></span>-->
-<!--    </div>-->
     <div th:replace="~{fragment/error :: error}"></div>
 
     <div class="container-center-user-page">
@@ -179,9 +176,7 @@
 
                     <div class="col-md-4">
                         <div class="folder-buttons">
-
-                            <div th:replace="~{fragment/object-control-buttons :: buttons}"></div>
-
+                            <div th:replace="~{fragment/object-control-buttons :: buttons(name=${object.getName()})}"></div>
                         </div>
                     </div>
                 </div>
@@ -217,12 +212,16 @@
             <!--                    <div class="line">-->
             <!--                    </div>-->
             <!--                </div>-->
+
+            <!-- Rename modal -->
+            <div th:replace="~{fragment/button-rename :: renameModal(name=${object.getName()})}"></div>
         </div>
     </div>
 </div>
 
 <!-- Create folder modal -->
 <div th:replace="~{fragment/create-folder-modal :: createFolderModal}"></div>
+
 
 
 

@@ -12,6 +12,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.shaded.org.bouncycastle.asn1.dvcs.DVCSObjectIdentifiers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
@@ -109,4 +110,48 @@ public class MinioServiceTest {
         List<ObjectReadDto> objects3 = minioService.getObjects(path);
         Assertions.assertEquals(0, objects3.size());
     }
+
+    @Test
+    void deleteObjectMinio() throws Exception {
+        String rootFolderName = "user-129-files";
+        minioService.createFolder(rootFolderName, "/");
+
+        String name1 = "test.txt";
+        String name2 = "test/";
+
+        String path = rootFolderName+"/";
+
+        minioService.createFolder(name1, path);
+        minioService.createFolder(name2, path);
+
+        List<ObjectReadDto> objects1 = minioService.getObjects(path);
+        Assertions.assertEquals(2, objects1.size());
+
+        minioService.deleteObjectMinio(path+name1+"/");
+        minioService.deleteObjectMinio(path+name2);
+        List<ObjectReadDto> objects2 = minioService.getObjects(path);
+        Assertions.assertEquals(0, objects2.size());
+    }
+
+    @Test
+    void renameObject() throws Exception {
+        String rootFolderName = "user-130-files";
+        ObjectReadDto rootFolder = minioService.createFolder(rootFolderName, "/");
+
+        String oldName = "test";
+        String newName = "mama";
+
+        String path = rootFolderName+"/";
+
+        minioService.createFolder(oldName, path);
+
+        minioService.renameObject(oldName, newName,path,rootFolder);
+        List<ObjectReadDto> objects = minioService.getObjects(path);
+        Assertions.assertEquals(1, objects.size());
+
+        Assertions.assertEquals(newName, objects.get(0).getName());
+
+    }
 }
+
+

@@ -6,7 +6,9 @@ import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.dto.FolderDeleteDto;
 import com.cloud_storage.dto.ObjectCreateDto;
 import com.cloud_storage.dto.ObjectReadDto;
+import com.cloud_storage.dto.RenameDto;
 import com.cloud_storage.service.MinioService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,19 +36,22 @@ public class StorageController {
     public String showContentsOfFolder(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                        @RequestParam(value = "path", required = false, defaultValue = "") String path,
                                        RedirectAttributes redirectAttributes,
-                                       Model model) throws Exception {
+                                       Model model,
+                                       HttpSession session) throws Exception {
         ObjectReadDto rootFolder = minioService.createRootFolder("user-" + userPrincipal.getId() + "-files/", "/");
 
         List<ObjectReadDto> objects = minioService.getObjects(PrefixGenerationUtil.generatePath(path, rootFolder));
 
-        redirectAttributes.addFlashAttribute("rootFolder", rootFolder);
+//        redirectAttributes.addFlashAttribute("rootFolder", rootFolder);
         model.addAttribute("userInfo", userPrincipal.getRole() + ": " + userPrincipal.getUsername());
         model.addAttribute("objectCreateDto", new ObjectCreateDto("", PrefixGenerationUtil.generatePath(path, rootFolder)));
         model.addAttribute("objects", objects);
         model.addAttribute("folderDeleteDto", new FolderDeleteDto());
+        model.addAttribute("renameDto", new RenameDto());
         model.addAttribute("path", PrefixGenerationUtil.getBackPath(path));
         model.addAttribute("links", PrefixGenerationUtil.generateFromDirectory(path, rootFolder));
-
+//model.addAttribute("rootFolder", rootFolder);
+        session.setAttribute("rootFolder", rootFolder);
         return "storage";
     }
 
@@ -84,5 +89,16 @@ public class StorageController {
             model.addAttribute("error", e.getMessage());
         }
         return "redirect:/storage?path=" + folderDeleteDto.getPath();
+    }
+
+
+    @PatchMapping("/rename")
+    public String rename(@ModelAttribute("renameDto") RenameDto renameDto,
+                         HttpSession session) throws MinioException {
+
+        ObjectReadDto rootFolder = (ObjectReadDto) session.getAttribute("rootFolder");
+
+        minioService.renameObject(renameDto.getOldName(),renameDto.getNewName(),renameDto.getPath(), rootFolder);
+        return "redirect:/storage?path="+renameDto.getPath();
     }
 }
