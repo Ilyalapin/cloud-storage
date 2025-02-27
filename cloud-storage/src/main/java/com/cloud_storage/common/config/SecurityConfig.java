@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .formLogin(login -> login
                         .loginPage("/user/sign-in")
                         .defaultSuccessUrl("/storage", true)
-                        .failureUrl("/sign-in?error=true")
+                        .failureUrl("/user/sign-in?error=true")
                         .permitAll())
                 .logout(logout -> logout
                         .logoutUrl("/sign-out")
