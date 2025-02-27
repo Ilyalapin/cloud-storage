@@ -1,8 +1,10 @@
 package com.cloud_storage.service;
 
+import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.common.exception.MinioFetchException;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
+import com.cloud_storage.common.util.ValidationUtil;
 import com.cloud_storage.dto.ObjectReadDto;
 import io.minio.*;
 import io.minio.errors.ErrorResponseException;
@@ -78,6 +80,11 @@ public class MinioService {
 
     public ObjectReadDto createFolder(String folderName, String path) throws MinioException {
         try {
+            ValidationUtil.validate(folderName);
+        }catch (RuntimeException e) {
+            throw new InvalidParameterException(e.getMessage());
+        }
+        try {
             log.info("Creating folder with name: {}", folderName);
             minioClient.putObject(PutObjectArgs.builder()
                     .bucket(BUCKET_NAME)
@@ -91,7 +98,7 @@ public class MinioService {
                     path + folderName + "/"
 //                    getSize(path)
             );
-        } catch (Exception e) {
+        }catch (Exception e) {
             throw new MinioException("Error to create a folder", e);
         }
     }
@@ -228,6 +235,11 @@ public class MinioService {
 
 
     public void renameObject(String oldName, String newName, String path, ObjectReadDto rootFolder) throws MinioException {
+        try {
+            ValidationUtil.validate(newName);
+        }catch (RuntimeException e) {
+            throw new InvalidParameterException(e.getMessage());
+        }
         if (path == null || path.isEmpty()) {
             path = rootFolder.getName();
         }

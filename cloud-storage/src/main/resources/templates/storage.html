@@ -119,7 +119,7 @@
         </form>
     </div>
 
-    <div th:replace="~{fragment/error :: error}"></div>
+
 
     <div class="container-center-user-page">
         <h2 th:if="${objects.isEmpty()}" class="text-center mt-4">This folder is empty</h2>
@@ -215,7 +215,9 @@
 
             <!-- Rename modal -->
             <div th:replace="~{fragment/button-rename :: renameModal(name=${object.getName()})}"></div>
+
         </div>
+        <div th:replace="~{fragment/error :: error}"></div>
     </div>
 </div>
 
