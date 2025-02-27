@@ -151,17 +151,17 @@ public class MinioService {
     public void deleteObject(String path) throws MinioException {
         Iterable<Result<Item>> objects = getAllInFolder(path);
         if (!objects.iterator().hasNext()) {
-            deleteEmptyObject(path);
+            deleteObjectMinio(path);
         } else {
             for (Result<Item> item : objects) {
                 try {
                     deleteAllInFolder(item.get().objectName());
-                    deleteEmptyObject(item.get().objectName());
+                    deleteObjectMinio(item.get().objectName());
                 } catch (Exception e) {
                     throw new MinioException("Error while receiving the files", e);
                 }
             }
-            deleteEmptyObject(path);
+            deleteObjectMinio(path);
         }
     }
 
@@ -176,14 +176,18 @@ public class MinioService {
                 Item item = result.get();
 
                 if (!item.isDir()) {
-                    deleteEmptyObject(item.objectName());
+
+                    //todo реализовать метод в PrefixGenerationUtil, который будет принимать item.objectName() и убирать последний слэш.
+                    //todo это нужно,чтобы удалить файл в строке ниже.
+
+                    deleteObjectMinio(item.objectName());
                     log.info("Deleted object: {}", item.objectName());
                 } else {
                     deleteAllInFolder(item.objectName());
                 }
             }
-            deleteEmptyObject(folderName);
-                log.info("Deleted folder: {}", folderName);
+            deleteObjectMinio(folderName);
+            log.info("Deleted folder: {}", folderName);
         } catch (Exception e) {
             throw new MinioException("Error while deleting folder: " + folderName, e);
         }
@@ -193,8 +197,11 @@ public class MinioService {
     /**
      * Метод удаляет один объект из хранилища MinIO по заданному пути.
      */
-    public void deleteEmptyObject(String path) throws MinioException {
+    public void deleteObjectMinio(String path) throws MinioException {
         try {
+            if (!path.endsWith("/")){
+                path += "/";
+            }
             RemoveObjectArgs args = RemoveObjectArgs.builder()
                     .bucket(BUCKET_NAME)
                     .object(path)
@@ -218,7 +225,34 @@ public class MinioService {
             throw new MinioException("Error while listing objects in folder: " + folderName, e);
         }
     }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public void renameObject(String oldName, String newName, String path, ObjectReadDto rootFolder) throws MinioException {
+        if (path == null || path.isEmpty()) {
+            path = rootFolder.getName();
+        }
+        copyObject(oldName, newName, path);
+        deleteObjectMinio(path+oldName);
+    }
+
+
+   public void copyObject(String oldName, String newName,String path) throws MinioException {
+       try {
+           createFolder(newName,path);
+           minioClient.copyObject(CopyObjectArgs.builder()
+                   .bucket(BUCKET_NAME)
+                   .object(newName)
+                   .source(CopySource.builder()
+                           .bucket(BUCKET_NAME)
+                           .object(path+oldName+"/")
+                           .build())
+                   .build());
+       } catch (Exception e) {
+           throw new MinioException("Error while copying object", e);
+       }
+   }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     /**
      * Когда использовать:
      * • Если нужно получить только объекты на верхнем уровне в бакете и я не хочу, чтобы результат включал вложенные объекты или папки.
