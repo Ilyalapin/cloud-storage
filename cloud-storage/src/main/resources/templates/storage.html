@@ -119,9 +119,10 @@
         </form>
     </div>
 
-    <div class="error" th:if="${error}" style="color: red;">
-        <span th:text="${error}"></span>
-    </div>
+<!--    <div class="error" th:if="${error}" style="color: red;">-->
+<!--        <span th:text="${error}"></span>-->
+<!--    </div>-->
+    <div th:replace="~{fragment/error :: error}"></div>
 
     <div class="container-center-user-page">
         <h2 th:if="${objects.isEmpty()}" class="text-center mt-4">This folder is empty</h2>

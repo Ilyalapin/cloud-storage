@@ -1,7 +1,6 @@
 package com.cloud_storage.controller;
 
 import com.cloud_storage.common.UserPrincipal;
-import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.service.MinioService;
 import com.cloud_storage.service.UserService;
@@ -58,14 +57,19 @@ public class UserController {
 
     @DeleteMapping
     public String delete(@AuthenticationPrincipal UserPrincipal userPrincipal,
-                         HttpSession session) throws MinioException {
+                         HttpSession session,
+                         Model model) {
         String folderName = "user-" + userPrincipal.getId() + "-files/";
+        try {
+            minioService.deleteObject(folderName);
 
-//        minioService.deleteFolder(folderName);
+            userService.delete(userPrincipal.getUsername());
+            session.invalidate();
 
-        userService.delete(userPrincipal.getUsername());
-        session.invalidate();
-
-        return "redirect:/storage/guest-page";
+            return "redirect:/storage/guest-page";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "redirect:/storage/guest-page";
+        }
     }
 }
