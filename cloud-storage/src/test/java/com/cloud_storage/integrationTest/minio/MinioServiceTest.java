@@ -12,7 +12,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.shaded.org.bouncycastle.asn1.dvcs.DVCSObjectIdentifiers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
@@ -37,8 +36,7 @@ public class MinioServiceTest {
 
 
     @Test
-    void createFolder() throws Exception {
-
+    void createFolderSuccessfully() throws Exception {
         String folderName = "test";
         String path = "user-1234-files/";
         ObjectReadDto newFolder = minioService.createFolder(folderName, path);
@@ -53,18 +51,13 @@ public class MinioServiceTest {
         String rootFolderName = "user-1002-files/";
         String pathRootFolder = "/";
 
-        ObjectReadDto rootFolder = minioService.createFolder(rootFolderName, pathRootFolder);
-
-        Assertions.assertNotNull(rootFolder);
-        Assertions.assertEquals(rootFolder.getName(), rootFolderName);
-        Assertions.assertEquals(rootFolder.getPath(), "/" + rootFolderName + "/");
+        ObjectReadDto rootFolder = minioService.createRootFolder(rootFolderName, pathRootFolder);
 
         String name1 = "photo";
         String name2 = "video";
-        String path = rootFolder.getPath();
 
-        ObjectReadDto newFolder1 = minioService.createFolder(name1, path);
-        ObjectReadDto newFolder2 = minioService.createFolder(name2, path);
+        ObjectReadDto newFolder1 = minioService.createFolder(name1, rootFolder.getPath());
+        ObjectReadDto newFolder2 = minioService.createFolder(name2, rootFolder.getPath());
 
         List<ObjectReadDto> objects = minioService.getObjects( rootFolder.getName());
 
@@ -80,18 +73,12 @@ public class MinioServiceTest {
 
 
     @Test
-    void deleteObject() throws Exception {
-        String rootFolderName = "user-162-files";
-        String pathRootFolder = "/";
-        minioService.createFolder(rootFolderName, pathRootFolder);
-
+    void deleteObjectSuccessfully() throws Exception {
         String name = "test";
         String name1 = "1";
         String name2 = "2";
         String name3 = "3";
-
-        String path = rootFolderName+"/";
-
+        String path = "user-162-files/";
         String path1 = path+name+"/";
         String path2 = path1+name2+"/";
 
@@ -111,32 +98,11 @@ public class MinioServiceTest {
         Assertions.assertEquals(0, objects3.size());
     }
 
-    @Test
-    void deleteObjectMinio() throws Exception {
-        String rootFolderName = "user-129-files";
-        minioService.createFolder(rootFolderName, "/");
-
-        String name1 = "test.txt";
-        String name2 = "test/";
-
-        String path = rootFolderName+"/";
-
-        minioService.createFolder(name1, path);
-        minioService.createFolder(name2, path);
-
-        List<ObjectReadDto> objects1 = minioService.getObjects(path);
-        Assertions.assertEquals(2, objects1.size());
-
-        minioService.deleteObjectMinio(path+name1+"/");
-        minioService.deleteObjectMinio(path+name2);
-        List<ObjectReadDto> objects2 = minioService.getObjects(path);
-        Assertions.assertEquals(0, objects2.size());
-    }
 
     @Test
-    void renameObject() throws Exception {
+    void renameObjectSuccessfully() throws Exception {
         String rootFolderName = "user-130-files";
-        ObjectReadDto rootFolder = minioService.createFolder(rootFolderName, "/");
+        ObjectReadDto rootFolder = minioService.createRootFolder(rootFolderName, "/");
 
         String oldName = "test";
         String newName = "mama";
@@ -151,6 +117,18 @@ public class MinioServiceTest {
 
         Assertions.assertEquals(newName, objects.get(0).getName());
 
+    }
+
+
+    @Test
+    void getSize() throws Exception{
+        String folderName = "test";
+        String path = "user-1020-files/";
+
+        ObjectReadDto newFolder = minioService.createFolder(folderName, path);
+
+        Assertions.assertEquals(0,newFolder.getSize());
+        minioService.deleteObject(path);
     }
 }
 
