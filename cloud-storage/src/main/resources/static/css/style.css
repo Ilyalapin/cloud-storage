@@ -258,6 +258,8 @@ h4 {
     display: block;
     align-items: center;
     margin-left: 350px;
+    font-size: 20px;
+    color: #696969;
 }
 .buttons{
     display: flex;
