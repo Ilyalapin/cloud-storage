@@ -2,7 +2,7 @@ package com.cloud_storage.unitTest.service;
 
 import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.UserAlreadyExistException;
-import com.cloud_storage.common.exception.UserNotFoundException;
+import com.cloud_storage.common.exception.NotFoundException;
 import com.cloud_storage.dto.LoginDto;
 import com.cloud_storage.dto.UserReadDto;
 import com.cloud_storage.entity.Role;
@@ -48,8 +48,8 @@ public class UserServiceTest {
 
     @Test
     void shouldThrowUserNotFoundExceptionWhenSearchFails() {
-        Mockito.when(userRepository.findByUsername(username)).thenThrow(UserNotFoundException.class);
-        assertThrows(UserNotFoundException.class, () -> userService.findByUsername(username));
+        Mockito.when(userRepository.findByUsername(username)).thenThrow(NotFoundException.class);
+        assertThrows(NotFoundException.class, () -> userService.findByUsername(username));
     }
 
     @Test
