@@ -185,32 +185,33 @@
             </div>
 
 
-            <!--                <div class="file-view" th:if="${!object.isDir()}">-->
-            <!--                    &lt;!&ndash;            File view&ndash;&gt;-->
-            <!--                    <div class="row6">-->
-            <!--                        <div class="col-md-4">-->
-            <!--                            <div class="file">-->
+            <div class="file-view" th:if="${!object.isDir()}">
+                <!--            File view-->
+                <div class="row6">
+                    <div class="col-md-4">
 
-            <!--                                <img src="/image/file.png" alt="file" class="file-icon">-->
-            <!--                                <a th:href="@{/storage(path=${object.getPath()})}" class="file-name"-->
-            <!--                                   th:text="${object.getName()}"></a>-->
-            <!--                            </div>-->
-            <!--                        </div>-->
+                        <div class="file">
+                            <img src="/image/file.png" alt="file" class="file-icon">
+                            <a th:href="@{/storage(path=${object.getPath()+object.getName()+'/'})}"
+                               class="file-name" th:text="${object.getName()}"></a>
+                        </div>
 
-            <!--                        <div class="col-md-4">-->
-            <!--                            <b class="file-size">-</b>-->
-            <!--                        </div>-->
+                    </div>
 
-            <!--                        <div class="col-md-4">-->
-            <!--                            <div class="file-buttons">-->
+                    <div class="col-md-4">
+                        <label class="file-size" th:text="${object.getSize()}+' Mb'"></label>
+                    </div>
 
-            <!--                            </div>-->
-            <!--                        </div>-->
-            <!--                    </div>-->
+                    <div class="col-md-4">
+                        <div class="file-buttons">
+                            <div th:replace="~{fragment/object-control-buttons :: buttons(name=${object.getName()}, isDir=${object.isDir()}, index=${iterStat.index})}"></div>
+                        </div>
+                    </div>
+                </div>
 
-            <!--                    <div class="line">-->
-            <!--                    </div>-->
-            <!--                </div>-->
+                <div class="line">
+                </div>
+            </div>
 
             <!-- Rename modal -->
             <div th:replace="~{fragment/button-rename :: renameModal( name=${object.getName()}, isDir=${object.isDir()}, index=${iterStat.index})}"></div>
