@@ -3,9 +3,10 @@ package com.cloud_storage.controller;
 import com.cloud_storage.common.UserPrincipal;
 import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.MinioException;
+import com.cloud_storage.common.exception.NotFoundException;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.dto.FolderDeleteDto;
-import com.cloud_storage.dto.ObjectCreateDto;
+import com.cloud_storage.dto.ObjectDto;
 import com.cloud_storage.dto.ObjectReadDto;
 import com.cloud_storage.dto.RenameDto;
 import com.cloud_storage.service.MinioService;
@@ -43,7 +44,7 @@ public class StorageController {
         List<ObjectReadDto> objects = minioService.getObjects(PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder));
 
         model.addAttribute("userInfo", userPrincipal.getRole() + ": " + userPrincipal.getUsername());
-        model.addAttribute("objectCreateDto", new ObjectCreateDto("", PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder)));
+        model.addAttribute("objectCreateDto", new ObjectDto("", PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder)));
         model.addAttribute("objects", objects);
         model.addAttribute("folderDeleteDto", new FolderDeleteDto());
         model.addAttribute("renameDto", new RenameDto());
@@ -57,13 +58,13 @@ public class StorageController {
 
     @PostMapping
     public String createFolder(@RequestParam(required = false) String path,
-                               @ModelAttribute("objectCreateDto") ObjectCreateDto objectCreateDto,
+                               @ModelAttribute("objectCreateDto") ObjectDto objectDto,
                                RedirectAttributes redirectAttributes) {
         try {
-            log.info("Creating new folder, folderName: {}, path: {}", objectCreateDto.getName(), path);
+            log.info("Creating new folder, folderName: {}, path: {}", objectDto.getName(), path);
 
-            objectCreateDto.setPath(path);
-            ObjectReadDto newFolder = minioService.createFolder(objectCreateDto.getName(), objectCreateDto.getPath());
+            objectDto.setPath(path);
+            ObjectReadDto newFolder = minioService.createFolder(objectDto.getName(), objectDto.getPath());
 
             log.info("Folder created: {}", newFolder);
         } catch (InvalidParameterException e) {
@@ -73,7 +74,7 @@ public class StorageController {
             log.error("Error creating folder: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/storage?path=" + objectCreateDto.getPath();
+        return "redirect:/storage?path=" + objectDto.getPath();
     }
 
 
@@ -110,5 +111,26 @@ public class StorageController {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/storage?path=" + renameDto.getPath();
+    }
+
+
+    @PostMapping("/download")
+    public String download(@ModelAttribute("objectCreateDto") ObjectDto objectDto,
+                           RedirectAttributes redirectAttributes) {
+        log.info("Received objectDto: {}", objectDto);
+        try {
+            if (!objectDto.getName().endsWith("/")){
+                objectDto.setName(objectDto.getName()+"/");
+            }
+            minioService.getAndSave(objectDto.getPath(), objectDto.getName());
+        } catch (NotFoundException e){
+            log.error("Error: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        catch (MinioException e) {
+            log.error("Downloading error: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/storage?path=" + objectDto.getPath();
     }
 }

@@ -2,6 +2,7 @@ package com.cloud_storage.service;
 
 import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.MinioException;
+import com.cloud_storage.common.exception.NotFoundException;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.common.util.ValidationUtil;
 import com.cloud_storage.dto.ObjectReadDto;
@@ -81,6 +82,7 @@ public class MinioService {
         } catch (RuntimeException e) {
             throw new InvalidParameterException(e.getMessage());
         }
+
         try {
             log.info("Creating folder with name: {}", folderName);
             minioClient.putObject(PutObjectArgs.builder()
@@ -322,6 +324,26 @@ public class MinioService {
         }
     }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+ * Метод getAndSave предназначен для загрузки объекта из хранилища MinIO и сохранения его на локальной файловой системе.
+ */
+public void getAndSave(String path, String objectName) throws MinioException {
+
+        List<ObjectReadDto> objects = getObjects(path+objectName);
+        if (objects.isEmpty()) {
+            throw new NotFoundException("No files for downloading were found. This folder is empty.");
+        }
+    try {
+        DownloadObjectArgs args = DownloadObjectArgs.builder()
+                .bucket(BUCKET_NAME)
+                .object(path)
+                .filename(objectName)
+                .build();
+        minioClient.downloadObject(args);
+    } catch (Exception e) {
+        throw new MinioException("Error while fetching files in Minio", e);
+    }
+}
 
     /* Этот метод позволяет получить метаданные группы объектов,например размер файла или дату последних изменений.
      Возможно он мне не пригодится
@@ -343,21 +365,7 @@ public class MinioService {
 //     }
 
 
-    /*
-     * Метод getAndSave предназначен для загрузки объекта из хранилища MinIO и сохранения его на локальной файловой системе.
-     */
-    public void getAndSave(Path source, String fileName) throws MinioException {
-        try {
-            DownloadObjectArgs args = DownloadObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(source.toString())
-                    .filename(fileName)
-                    .build();
-            minioClient.downloadObject(args);
-        } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
-        }
-    }
+
 
     /*
      * Метод предназначен для загрузки файла из локального хранилища в хранилище MinIO.
