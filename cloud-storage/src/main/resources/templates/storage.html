@@ -120,7 +120,6 @@
     </div>
 
 
-
     <div class="container-center-user-page">
         <h2 th:if="${objects.isEmpty()}" class="text-center mt-4">This folder is empty</h2>
 
@@ -132,7 +131,7 @@
                     </li>
 
                     <li class="home-directory" th:if="${!path.isEmpty()}">
-                        <a th:href="@{/storage(path=${path})}" th:text="${links}"></a>
+                        <a th:href="@{/storage(path=${path})}" th:text="${breadCrumbs}"></a>
                     </li>
                 </ol>
             </nav>
@@ -154,7 +153,7 @@
             </div>
         </form>
 
-        <div class="row66" th:each="object : ${objects}">
+        <div class="row66" th:each="object, iterStat : ${objects}">
 
             <!--            Folder view-->
             <div class="folder-view" th:if="${object.isDir()}">
@@ -165,7 +164,7 @@
                         <div class="folder">
                             <img src="/image/folder.png" alt="folder" class="folder-icon">
                             <a th:href="@{/storage(path=${object.getPath()+object.getName()+'/'})}"
-                                    class="folder-name" th:text="${object.getName()}"></a>
+                               class="folder-name" th:text="${object.getName()}"></a>
                         </div>
 
                     </div>
@@ -176,7 +175,7 @@
 
                     <div class="col-md-4">
                         <div class="folder-buttons">
-                            <div th:replace="~{fragment/object-control-buttons :: buttons(name=${object.getName()})}"></div>
+                            <div th:replace="~{fragment/object-control-buttons :: buttons(name=${object.getName()}, isDir=${object.isDir()}, index=${iterStat.index})}"></div>
                         </div>
                     </div>
                 </div>
@@ -214,7 +213,7 @@
             <!--                </div>-->
 
             <!-- Rename modal -->
-            <div th:replace="~{fragment/button-rename :: renameModal(name=${object.getName()})}"></div>
+            <div th:replace="~{fragment/button-rename :: renameModal( name=${object.getName()}, isDir=${object.isDir()}, index=${iterStat.index})}"></div>
 
         </div>
         <div th:replace="~{fragment/error :: error}"></div>
@@ -223,8 +222,6 @@
 
 <!-- Create folder modal -->
 <div th:replace="~{fragment/create-folder-modal :: createFolderModal}"></div>
-
-
 
 
 <!-- Upload folder modal -->

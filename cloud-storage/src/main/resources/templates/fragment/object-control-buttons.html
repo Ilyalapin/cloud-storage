@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
 </head>
 <body>
-
-<div th:fragment="buttons(name)">
+<!--<div th:fragment="buttons(name)">-->
+<div th:fragment="buttons(name,isDir,index)">
     <div class="buttons">
         <a href="#" type="button" class="btn btn-outline-secondary btn-sm">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
@@ -30,20 +30,16 @@
                 <div><a href="#" class="dropdown-item">Move</a></div>
                 <div>
                     <button
-                            type="button" class="dropdown-item btn text-danger" data-bs-toggle="modal"
-                            data-bs-target="#renameModal" th:attr="data-object-name=${name}">Rename
+                            type="button" class="dropdown-item " data-bs-toggle="modal"
+                            th:data-bs-target="'#renameModal_'+${index}">Rename
                     </button>
                 </div>
 
                 <div>
-                    <form th:action="@{/storage/deleteFolder}" th:method="delete"
-                          th:object="${folderDeleteDto}">
-
+                    <form th:action="@{/storage/deleteFolder}" th:method="delete" th:object="${folderDeleteDto}">
                         <input name="path" th:value="${object.getPath()}" type="hidden">
                         <input type="hidden" name="folderName" th:value="${object.getName()}">
-
-                        <button type="submit" class="dropdown-item btn text-danger">Delete
-                        </button>
+                        <button type="submit" class="dropdown-item btn text-danger">Delete</button>
                     </form>
                 </div>
             </div>

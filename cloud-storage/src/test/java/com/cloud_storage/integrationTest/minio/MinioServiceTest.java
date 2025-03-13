@@ -1,6 +1,7 @@
 package com.cloud_storage.integrationTest.minio;
 
 import com.cloud_storage.dto.ObjectReadDto;
+import com.cloud_storage.dto.RenameDto;
 import com.cloud_storage.integrationTest.config.MinioServiceTestConfig;
 import com.cloud_storage.service.MinioService;
 import io.minio.MinioClient;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.*;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.MinIOContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
@@ -26,13 +26,26 @@ public class MinioServiceTest {
 
     @Autowired
     MinioClient minioClient;
+    private MinIOContainer minio;
 
-    @Container
-    static MinIOContainer minio = new MinIOContainer(DockerImageName.parse("minio/minio:latest"))
-            .withEnv("MINIO_ROOT_USER", "minioadmin62")
-            .withEnv("MINIO_ROOT_PASSWORD", "minioadmin62")
-            .withCommand("server /data")
-            .withExposedPorts(9000);
+
+    @BeforeEach
+    public void setUp() {
+        minio = new MinIOContainer(DockerImageName.parse("minio/minio:latest"))
+                .withEnv("MINIO_ROOT_USER", "minioadmin62")
+                .withEnv("MINIO_ROOT_PASSWORD", "minioadmin62")
+                .withCommand("server /data")
+                .withExposedPorts(9000);
+        minio.start();
+    }
+
+
+    @AfterEach
+    public void tearDown() {
+        if (minio != null) {
+            minio.stop();
+        }
+    }
 
 
     @Test
@@ -59,7 +72,7 @@ public class MinioServiceTest {
         ObjectReadDto newFolder1 = minioService.createFolder(name1, rootFolder.getPath());
         ObjectReadDto newFolder2 = minioService.createFolder(name2, rootFolder.getPath());
 
-        List<ObjectReadDto> objects = minioService.getObjects( rootFolder.getName());
+        List<ObjectReadDto> objects = minioService.getObjects(rootFolder.getName());
 
         Assertions.assertNotNull(objects);
         Assertions.assertEquals(2, objects.size());
@@ -79,11 +92,11 @@ public class MinioServiceTest {
         String name2 = "2";
         String name3 = "3";
         String path = "user-162-files/";
-        String path1 = path+name+"/";
-        String path2 = path1+name2+"/";
+        String path1 = path + name + "/";
+        String path2 = path1 + name2 + "/";
 
         minioService.createFolder(name, path);
-        List<ObjectReadDto> objects1 = minioService.getObjects( path);
+        List<ObjectReadDto> objects1 = minioService.getObjects(path);
         Assertions.assertEquals(1, objects1.size());
 
         minioService.createFolder(name1, path1);
@@ -100,35 +113,41 @@ public class MinioServiceTest {
 
 
     @Test
-    void renameObjectSuccessfully() throws Exception {
-        String rootFolderName = "user-130-files";
-        ObjectReadDto rootFolder = minioService.createRootFolder(rootFolderName, "/");
-
-        String oldName = "test";
-        String newName = "mama";
-
-        String path = rootFolderName+"/";
-
-        minioService.createFolder(oldName, path);
-
-        minioService.renameObject(oldName, newName,path,rootFolder);
-        List<ObjectReadDto> objects = minioService.getObjects(path);
-        Assertions.assertEquals(1, objects.size());
-
-        Assertions.assertEquals(newName, objects.get(0).getName());
-
-    }
-
-
-    @Test
-    void getSize() throws Exception{
+    void getSize() throws Exception {
         String folderName = "test";
         String path = "user-1020-files/";
 
         ObjectReadDto newFolder = minioService.createFolder(folderName, path);
 
-        Assertions.assertEquals(0,newFolder.getSize());
+        Assertions.assertEquals(0, newFolder.getSize());
         minioService.deleteObject(path);
+    }
+
+
+    @Test
+    void renameObjectSuccessfully() throws Exception {
+        String rootFolderName = "user-143-files";
+        ObjectReadDto rootFolder = minioService.createRootFolder(rootFolderName, "/");
+
+        String oldName = "test1";
+        String newName = "test2";
+        String path = rootFolderName + "/";
+
+        ObjectReadDto folder1 = minioService.createFolder(oldName, path);
+        ObjectReadDto folder2 = minioService.createFolder("1", folder1.getPath());
+        minioService.createFolder("2", folder2.getPath());
+
+        RenameDto renameDto = new RenameDto(
+                oldName,
+                newName,
+                path,
+                "true"
+        );
+        minioService.renameObject(renameDto, rootFolder);
+
+        List<ObjectReadDto> objects = minioService.getObjects(path);
+        Assertions.assertEquals(1, objects.size());
+        Assertions.assertEquals(newName, objects.get(0).getName());
     }
 }
 
