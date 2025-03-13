@@ -13,4 +13,6 @@ public class RenameDto {
     private String newName;
 
     private String path;
+
+    private String isDir;
 }

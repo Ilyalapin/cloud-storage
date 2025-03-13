@@ -5,6 +5,7 @@ import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.common.util.ValidationUtil;
 import com.cloud_storage.dto.ObjectReadDto;
+import com.cloud_storage.dto.RenameDto;
 import io.minio.*;
 import io.minio.errors.ErrorResponseException;
 import io.minio.messages.Item;
@@ -121,7 +122,6 @@ public class MinioService {
                         item.get().isDir(),
                         path,
                         item.get().size());
-
                 result.add(object);
             } catch (Exception e) {
                 throw new MinioException("There is an error while receiving the files, try again later", e);
@@ -222,33 +222,84 @@ public class MinioService {
     }
 
 
-    public void renameObject(String oldName, String newName, String path, ObjectReadDto rootFolder) throws MinioException {
+    public void renameObject(RenameDto renameDto, ObjectReadDto rootFolder) throws MinioException {
+        try {
+            ValidationUtil.validate(renameDto.getNewName());
+        } catch (RuntimeException e) {
+            throw new InvalidParameterException(e.getMessage());
+        }
+
+        renameDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(renameDto.getPath(), rootFolder));
+        copy(renameDto,rootFolder.getName());
+        deleteObject(renameDto.getPath() + renameDto.getOldName() + "/");
+    }
+    private void copy(RenameDto renameDto,String path) throws MinioException {
+        try {
+            List<ObjectReadDto> objects = getObjects(renameDto.getPath()+renameDto.getOldName()+"/");
+            log.warn("Objects found: {}", objects);
+
+            if (!objects.iterator().hasNext()) {
+                createFolder(renameDto.getNewName(), path);
+            }
+            else {
+
+                    ObjectReadDto newFolder = createFolder(renameDto.getNewName(), path);
+
+                for (ObjectReadDto object : objects) {
+                    RenameDto childDto = new RenameDto(
+                            object.getName(),
+                            object.getName(),
+                            object.getPath(),
+                            String.valueOf(object.isDir())
+                    );
+                    ObjectReadDto folder = createFolder(object.getName(),newFolder.getPath());
+                    copy(childDto, PrefixGenerationUtil.generateNewPathForCopyObject(folder.getPath()));
+                }
+            }
+
+        } catch (Exception e) {
+            throw new MinioException("Error while copying object", e);
+        }
+    }
+
+
+    private void copyObject(RenameDto renameDto) throws MinioException {
+        try {
+            minioClient.copyObject(CopyObjectArgs.builder()
+                    .bucket(BUCKET_NAME)
+                    .object(renameDto.getNewName())
+                    .source(CopySource.builder()
+                            .bucket(BUCKET_NAME)
+                            .object(renameDto.getPath() + renameDto.getOldName() + "/")
+                            .build())
+                    .build());
+        } catch (Exception e) {
+            throw new MinioException("Error while copying object", e);
+        }
+    }
+
+    public ObjectReadDto createFile(String newName, String path) throws MinioException {
         try {
             ValidationUtil.validate(newName);
         } catch (RuntimeException e) {
             throw new InvalidParameterException(e.getMessage());
         }
-        if (path == null || path.isEmpty()) {
-            path = rootFolder.getName();
-        }
-        copyObject(oldName, newName, path);
-        delete(path + oldName);
-    }
-
-
-    private void copyObject(String oldName, String newName, String path) throws MinioException {
         try {
-            createFolder(newName, path);
-            minioClient.copyObject(CopyObjectArgs.builder()
+            log.info("Creating file with name: {}", newName);
+            minioClient.putObject(PutObjectArgs.builder()
                     .bucket(BUCKET_NAME)
-                    .object(newName)
-                    .source(CopySource.builder()
-                            .bucket(BUCKET_NAME)
-                            .object(path + oldName + "/")
-                            .build())
+                    .object(path + newName)
+                    .stream(new ByteArrayInputStream(new byte[]{}), 0, -1)
                     .build());
+            log.trace("File:{} created successfully", newName);
+            return new ObjectReadDto(
+                    newName,
+                    false,
+                    path + newName,
+                    getSize(path + newName)
+            );
         } catch (Exception e) {
-            throw new MinioException("Error while copying object", e);
+            throw new MinioException("Error to create a file", e);
         }
     }
 
@@ -272,66 +323,6 @@ public class MinioService {
     }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /*
-      Когда использовать:
-      • Если нужно получить только объекты на верхнем уровне в бакете и я не хочу, чтобы результат включал вложенные объекты или папки.
-      • Когда надо ограничить количество возвращаемых объектов для повышения производительности.
-     */
-
-//    public List<Item> list() throws MinioException {
-//        ListObjectsArgs args = ListObjectsArgs.builder()
-//                .bucket(BUCKET_NAME)
-//                .prefix("")
-//                .recursive(false)
-//                .build();
-//        Iterable<Result<Item>> myObjects = minioClient.listObjects(args);
-//        return getItems(myObjects);
-//    }
-
-    /*
-      todo такой же метод,как и выше,но без префикса и рекурсива.
-      Когда использовать:
-      • Если нужно получить полный список всех объектов в бакете, включая все вложенные структуры и подкаталоги.
-      • Когда уверен, что хочу получить все данные без каких-либо ограничений.
-     */
-//      public List<Item> fullList() {
-//      ListObjectsArgs args = ListObjectsArgs.builder()
-//      .bucket(bucketName)
-//      .build();
-//      Iterable<Result<Item>> myObjects = minioClient.listObjects(args);
-//      return getItems(myObjects);
-//      }
-
-
-//    private List<Item> getItems(Iterable<Result<Item>> myObjects) {
-//        return StreamSupport
-//                .stream(myObjects.spliterator(), true)
-//                .map(itemResult -> {
-//                    try {
-//                        return itemResult.get();
-//                    } catch (Exception e) {
-//                        throw new MinioFetchException("Error while parsing list of objects", e);
-//                    }
-//                })
-//                .collect(Collectors.toList());
-//    }
-
-    /*
-      Этот метод показывает содержимое по заданному в префиксе пути, например, List<Item> items = list(Path.of("user-62-files/"));
-      и ничего более. То есть если в заданной директории будет лежать папка фотографии и 2 файла, то этот метод покажет это все и
-      не покажет содержимое папки фотографии
-     */
-//    public List<Item> list(String path, boolean isRecursive) {
-//        ListObjectsArgs args = ListObjectsArgs.builder()
-//                .bucket(BUCKET_NAME)
-//                .prefix(path)
-//                .recursive(isRecursive)
-//                .build();
-//        Iterable<Result<Item>> myObjects = minioClient.listObjects(args);
-//        return getItems(myObjects);
-//    }
-
-
     /* Этот метод позволяет получить метаданные группы объектов,например размер файла или дату последних изменений.
      Возможно он мне не пригодится
      */
@@ -350,7 +341,6 @@ public class MinioService {
 //     })
 //     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 //     }
-
 
 
     /*

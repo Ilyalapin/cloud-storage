@@ -40,15 +40,15 @@ public class StorageController {
                                        HttpSession session) throws Exception {
         ObjectReadDto rootFolder = minioService.createRootFolder("user-" + userPrincipal.getId() + "-files/", "/");
 
-        List<ObjectReadDto> objects = minioService.getObjects(PrefixGenerationUtil.generatePath(path, rootFolder));
+        List<ObjectReadDto> objects = minioService.getObjects(PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder));
 
         model.addAttribute("userInfo", userPrincipal.getRole() + ": " + userPrincipal.getUsername());
-        model.addAttribute("objectCreateDto", new ObjectCreateDto("", PrefixGenerationUtil.generatePath(path, rootFolder)));
+        model.addAttribute("objectCreateDto", new ObjectCreateDto("", PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder)));
         model.addAttribute("objects", objects);
         model.addAttribute("folderDeleteDto", new FolderDeleteDto());
         model.addAttribute("renameDto", new RenameDto());
-        model.addAttribute("path", PrefixGenerationUtil.getBackPath(path));
-        model.addAttribute("links", PrefixGenerationUtil.generateFromDirectory(path, rootFolder));
+        model.addAttribute("path", PrefixGenerationUtil.generatePathBackForBreadCrumbs(path));
+        model.addAttribute("breadCrumbs", PrefixGenerationUtil.generatePathForBreadCrumbs(path, rootFolder));
         session.setAttribute("rootFolder", rootFolder);
 
         return "storage";
@@ -97,10 +97,11 @@ public class StorageController {
     public String rename(@ModelAttribute("renameDto") RenameDto renameDto,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
+        log.info("Received renameDto: {}", renameDto);
         try {
             ObjectReadDto rootFolder = (ObjectReadDto) session.getAttribute("rootFolder");
-            minioService.renameObject(renameDto.getOldName(), renameDto.getNewName(), renameDto.getPath(), rootFolder);
 
+            minioService.renameObject(renameDto, rootFolder);
         } catch (InvalidParameterException e) {
             log.error(e.getMessage());
             redirectAttributes.addFlashAttribute("error", "Error renaming folder. " + e.getMessage());

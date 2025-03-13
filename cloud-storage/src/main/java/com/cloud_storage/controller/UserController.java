@@ -59,9 +59,9 @@ public class UserController {
     public String delete(@AuthenticationPrincipal UserPrincipal userPrincipal,
                          HttpSession session,
                          Model model) {
-        String folderName = "user-" + userPrincipal.getId() + "-files/";
+        String rootFolder = "user-" + userPrincipal.getId() + "-files/";
         try {
-            minioService.deleteObject(folderName);
+            minioService.deleteObject(rootFolder);
 
             userService.delete(userPrincipal.getUsername());
             session.invalidate();
