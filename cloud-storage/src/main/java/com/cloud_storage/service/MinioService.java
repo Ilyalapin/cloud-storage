@@ -3,8 +3,10 @@ package com.cloud_storage.service;
 import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.common.exception.NotFoundException;
+import com.cloud_storage.common.util.FileSizeConverter;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.common.util.ValidationUtil;
+import com.cloud_storage.dto.FileUploadDto;
 import com.cloud_storage.dto.ObjectReadDto;
 import com.cloud_storage.dto.RenameDto;
 import io.minio.*;
@@ -14,9 +16,9 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -114,22 +116,47 @@ public class MinioService {
 
 
     public List<ObjectReadDto> getObjects(String path) throws MinioException {
-        Iterable<Result<Item>> items = findObjects(path);
-
-        List<ObjectReadDto> result = new ArrayList<>();
-        for (Result<Item> item : items) {
-            try {
-                ObjectReadDto object = new ObjectReadDto(
-                        PrefixGenerationUtil.generateFolderNameForView(item.get().objectName()),
-                        item.get().isDir(),
-                        path,
-                        item.get().size());
-                result.add(object);
-            } catch (Exception e) {
-                throw new MinioException("There is an error while receiving the files, try again later", e);
-            }
+        List<ObjectReadDto> objects = new ArrayList<>();
+        try {
+            getItems(path, objects);
+        } catch (Exception e) {
+            throw new MinioException("Error while receiving the files: ", e);
         }
-        return result;
+        return objects;
+    }
+
+
+    private void getItems(String path, List<ObjectReadDto> objects) throws MinioException {
+        Iterable<Result<Item>> items = findObjects(path);
+        long totalSize = 0;
+        try {
+            for (Result<Item> result : items) {
+                Item item = result.get();
+                if (item.isDir()) {
+                    List<ObjectReadDto> subObjects = new ArrayList<>();
+                    getItems(item.objectName(), subObjects);
+
+                    for (ObjectReadDto subObject : subObjects) {
+                        totalSize += FileSizeConverter.convertToBytes(subObject.getSize());
+                    }
+                    ObjectReadDto directoryObject = new ObjectReadDto(
+                            PrefixGenerationUtil.generateFolderNameForView(item.objectName()),
+                            true,
+                            path,
+                            FileSizeConverter.convert(totalSize));
+                    objects.add(directoryObject);
+                } else {
+                    ObjectReadDto object = new ObjectReadDto(
+                            PrefixGenerationUtil.generateFolderNameForView(item.objectName()),
+                            false,
+                            path,
+                            FileSizeConverter.convert(item.size()));
+                    objects.add(object);
+                }
+            }
+        } catch (Exception e) {
+            throw new MinioException("Error while receiving the files: ", e);
+        }
     }
 
 
@@ -159,13 +186,15 @@ public class MinioService {
         if (!objects.iterator().hasNext()) {
             delete(path);
         } else {
-            for (Result<Item> item : objects) {
-                try {
-                    deleteAllByPath(item.get().objectName());
-                    delete(item.get().objectName());
-                } catch (Exception e) {
-                    throw new MinioException("Error while receiving the files", e);
+            try {
+                for (Result<Item> result : objects) {
+                    Item item = result.get();
+
+                    deleteAllByPath(item.objectName());
+                    delete(item.objectName());
                 }
+            } catch (Exception e) {
+                throw new MinioException("Error while receiving the files", e);
             }
             delete(path);
         }
@@ -232,20 +261,20 @@ public class MinioService {
         }
 
         renameDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(renameDto.getPath(), rootFolder));
-        copy(renameDto,rootFolder.getName());
+        copy(renameDto, rootFolder.getName());
         deleteObject(renameDto.getPath() + renameDto.getOldName() + "/");
     }
-    private void copy(RenameDto renameDto,String path) throws MinioException {
+
+    private void copy(RenameDto renameDto, String path) throws MinioException {
         try {
-            List<ObjectReadDto> objects = getObjects(renameDto.getPath()+renameDto.getOldName()+"/");
+            List<ObjectReadDto> objects = getObjects(renameDto.getPath() + renameDto.getOldName() + "/");
             log.warn("Objects found: {}", objects);
 
             if (!objects.iterator().hasNext()) {
                 createFolder(renameDto.getNewName(), path);
-            }
-            else {
+            } else {
 
-                    ObjectReadDto newFolder = createFolder(renameDto.getNewName(), path);
+                ObjectReadDto newFolder = createFolder(renameDto.getNewName(), path);
 
                 for (ObjectReadDto object : objects) {
                     RenameDto childDto = new RenameDto(
@@ -254,7 +283,7 @@ public class MinioService {
                             object.getPath(),
                             String.valueOf(object.isDir())
                     );
-                    ObjectReadDto folder = createFolder(object.getName(),newFolder.getPath());
+                    ObjectReadDto folder = createFolder(object.getName(), newFolder.getPath());
                     copy(childDto, PrefixGenerationUtil.generateNewPathForCopyObject(folder.getPath()));
                 }
             }
@@ -306,9 +335,22 @@ public class MinioService {
     }
 
 
-    public Long getSize(String path) throws MinioException {
-        StatObjectResponse metadata = getMetadata(path);
-        return metadata.size();
+    //    public String getSize(String path) throws MinioException {
+//        StatObjectResponse metadata = getMetadata(path);
+//        return FileSizeConverter.convert(metadata.size());
+//    }
+    public String getSize(String path) throws MinioException {
+        long totalFileSize = 0;
+        try {
+            Iterable<Result<Item>> objects = getAllByPath(path);
+            for (Result<Item> object : objects) {
+                Item result = object.get();
+                totalFileSize += result.size();
+            }
+            return FileSizeConverter.convert(totalFileSize);
+        } catch (Exception e) {
+            throw new MinioException("Error while getting file size", e);
+        }
     }
 
 
@@ -323,27 +365,71 @@ public class MinioService {
             throw new MinioException("Error while fetching files in Minio", e);
         }
     }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
- * Метод getAndSave предназначен для загрузки объекта из хранилища MinIO и сохранения его на локальной файловой системе.
- */
-public void getAndSave(String path, String objectName) throws MinioException {
 
-        List<ObjectReadDto> objects = getObjects(path+objectName);
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*
+     * Метод getAndSave предназначен для загрузки объекта из хранилища MinIO и сохранения его на локальной файловой системе.
+     */
+    public void getAndSave(String path, String objectName) throws MinioException {
+
+        List<ObjectReadDto> objects = getObjects(path + objectName + "/");
         if (objects.isEmpty()) {
             throw new NotFoundException("No files for downloading were found. This folder is empty.");
         }
-    try {
-        DownloadObjectArgs args = DownloadObjectArgs.builder()
-                .bucket(BUCKET_NAME)
-                .object(path)
-                .filename(objectName)
-                .build();
-        minioClient.downloadObject(args);
-    } catch (Exception e) {
-        throw new MinioException("Error while fetching files in Minio", e);
+        try {
+            DownloadObjectArgs args = DownloadObjectArgs.builder()
+                    .bucket(BUCKET_NAME)
+                    .object(path)
+                    .filename(objectName)
+                    .build();
+            minioClient.downloadObject(args);
+        } catch (Exception e) {
+            throw new MinioException("Error while fetching files in Minio", e);
+        }
     }
-}
+
+
+    public void uploadFile(FileUploadDto fileUploadDto) throws MinioException {
+        try {
+            List<MultipartFile> files = fileUploadDto.getFiles();
+            for (MultipartFile file : files) {
+                putObject(
+                        fileUploadDto.getPath() + file.getOriginalFilename(),
+                        file.getContentType(),
+                        file.getInputStream());
+            }
+        } catch (Exception e) {
+            throw new MinioException("Error while fetching files in Minio", e);
+        }
+    }
+
+    public void putObject(String objectName, String contentType, InputStream inputStream) throws MinioException {
+        try {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(BUCKET_NAME)
+                            .object(objectName)
+                            .stream(
+                                    inputStream, -1, 10485760)
+                            .contentType(contentType)
+                            .build());
+        } catch (Exception e) {
+            throw new MinioException("Error in placing an object in storage", e);
+        }
+    }
+
+
+    public InputStream get(String path) throws MinioException {
+        try {
+            GetObjectArgs args = GetObjectArgs.builder()
+                    .bucket(BUCKET_NAME)
+                    .object(path)
+                    .build();
+            return minioClient.getObject(args);
+        } catch (Exception e) {
+            throw new MinioException("Error while fetching files in Minio", e);
+        }
+    }
 
     /* Этот метод позволяет получить метаданные группы объектов,например размер файла или дату последних изменений.
      Возможно он мне не пригодится
@@ -363,27 +449,6 @@ public void getAndSave(String path, String objectName) throws MinioException {
 //     })
 //     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 //     }
-
-
-
-
-    /*
-     * Метод предназначен для загрузки файла из локального хранилища в хранилище MinIO.
-     * Скорее всего будет использован для загрузки файла
-     */
-    public void upload(Path source, File file) throws MinioException {
-        try {
-            UploadObjectArgs args = UploadObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(source.toString())
-                    .filename(file.getAbsolutePath())
-                    .build();
-            minioClient.uploadObject(args);
-        } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
-        }
-    }
-
     /*
      * Метод предназначен для загрузки объекта в хранилище MinIO без указания типа контента загружаемого файла.
      * Скорее всего будет использован для загрузки папок
@@ -420,19 +485,5 @@ public void getAndSave(String path, String objectName) throws MinioException {
         }
     }
 
-    /*
-     * Этот метод нужен для чтения файла
-     */
-    public InputStream get(Path path) throws MinioException {
-        try {
-            GetObjectArgs args = GetObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(path.toString())
-                    .build();
-            return minioClient.getObject(args);
-        } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
-        }
-    }
 
 }

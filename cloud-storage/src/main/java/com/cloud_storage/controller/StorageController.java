@@ -5,10 +5,7 @@ import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.common.exception.NotFoundException;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
-import com.cloud_storage.dto.FolderDeleteDto;
-import com.cloud_storage.dto.ObjectDto;
-import com.cloud_storage.dto.ObjectReadDto;
-import com.cloud_storage.dto.RenameDto;
+import com.cloud_storage.dto.*;
 import com.cloud_storage.service.MinioService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +47,7 @@ public class StorageController {
         model.addAttribute("renameDto", new RenameDto());
         model.addAttribute("path", PrefixGenerationUtil.generatePathBackForBreadCrumbs(path));
         model.addAttribute("breadCrumbs", PrefixGenerationUtil.generatePathForBreadCrumbs(path, rootFolder));
+        model.addAttribute("fileUploadDto", new FileUploadDto(PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder), null));
         session.setAttribute("rootFolder", rootFolder);
 
         return "storage";
@@ -119,18 +117,28 @@ public class StorageController {
                            RedirectAttributes redirectAttributes) {
         log.info("Received objectDto: {}", objectDto);
         try {
-            if (!objectDto.getName().endsWith("/")){
-                objectDto.setName(objectDto.getName()+"/");
-            }
             minioService.getAndSave(objectDto.getPath(), objectDto.getName());
-        } catch (NotFoundException e){
+        } catch (NotFoundException e) {
             log.error("Error: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        catch (MinioException e) {
+        } catch (MinioException e) {
             log.error("Downloading error: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/storage?path=" + objectDto.getPath();
+    }
+
+
+    @PostMapping("/uploadFile")
+    public String uploadFile(@ModelAttribute("fileUploadDto") FileUploadDto fileUploadDto,
+                             @RequestParam(required = false) String path,
+                             RedirectAttributes redirectAttributes) {
+        fileUploadDto.setPath(path);
+        try {
+            minioService.uploadFile(fileUploadDto);
+        } catch (MinioException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/storage?path=" + fileUploadDto.getPath();
     }
 }
