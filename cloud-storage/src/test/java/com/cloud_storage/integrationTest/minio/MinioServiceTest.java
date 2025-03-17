@@ -1,5 +1,7 @@
 package com.cloud_storage.integrationTest.minio;
 
+import com.cloud_storage.common.util.FileSizeConverter;
+import com.cloud_storage.dto.FileUploadDto;
 import com.cloud_storage.dto.ObjectReadDto;
 import com.cloud_storage.dto.RenameDto;
 import com.cloud_storage.integrationTest.config.MinioServiceTestConfig;
@@ -7,14 +9,21 @@ import com.cloud_storage.service.MinioService;
 import io.minio.MinioClient;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.*;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
+
+import static org.mockito.Mockito.when;
 
 @Testcontainers
 @ExtendWith(SpringExtension.class)
@@ -148,6 +157,38 @@ public class MinioServiceTest {
         List<ObjectReadDto> objects = minioService.getObjects(path);
         Assertions.assertEquals(1, objects.size());
         Assertions.assertEquals(newName, objects.get(0).getName());
+    }
+
+
+    @Test
+    void UploadFileSuccessfully() throws Exception {
+        String rootFolderName = "user-111-files";
+        ObjectReadDto rootFolder = minioService.createRootFolder(rootFolderName, "/");
+        String path = "user-111-files/folder/";
+
+        ObjectReadDto testFolder = minioService.createFolder("folder","user-111-files/");
+
+        List<MultipartFile> files = new ArrayList<>();
+
+        String contentType = "text/plain";
+        byte[] content = "Hello, world!".getBytes();
+        InputStream inputStream = new ByteArrayInputStream(content);
+
+        MultipartFile mockFile1 = Mockito.mock(MultipartFile.class);
+        when(mockFile1.getOriginalFilename()).thenReturn("file1.txt");
+        when(mockFile1.getContentType()).thenReturn(contentType);
+        when(mockFile1.getInputStream()).thenReturn(inputStream);
+
+        files.add(mockFile1);
+
+        FileUploadDto testDto = new FileUploadDto(path,files);
+        minioService.uploadFile(testDto);
+        List<ObjectReadDto> objects = minioService.getObjects(path);
+        Assertions.assertEquals(1, objects.size());
+        Assertions.assertEquals(mockFile1.getOriginalFilename(), objects.get(0).getName());
+        Assertions.assertEquals(objects.get(0).getSize(), "13,00 b");
+
+//        String folderSize = minioService.getSize(path);
     }
 }
 

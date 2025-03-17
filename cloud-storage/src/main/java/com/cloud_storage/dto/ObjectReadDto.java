@@ -3,6 +3,7 @@ package com.cloud_storage.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,7 +15,8 @@ public class ObjectReadDto {
 
     private String path;
 
-    private Long size;
+//        private Double size;
+    private String size;
 
     public ObjectReadDto(String name, boolean isDir, String path) {
         this.name = name;

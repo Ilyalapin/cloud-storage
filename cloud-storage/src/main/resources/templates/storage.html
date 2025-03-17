@@ -170,7 +170,9 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="folder-size" th:text="${object.getSize()}+' Mb'"></label>
+                        <label class="folder-size" th:text="${object.getSize()}"></label>
+
+<!--                        <label class="folder-size" ></label>-->
                     </div>
 
                     <div class="col-md-4">
@@ -199,7 +201,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="file-size" th:text="${object.getSize()}+' Mb'"></label>
+                        <label class="file-size" th:text="${object.getSize()}"></label>
                     </div>
 
                     <div class="col-md-4">
@@ -228,8 +230,8 @@
 <!-- Upload folder modal -->
 <!--<div th:replace="~{fragment/upload-folder-modal :: uploadFolderModal}"></div>-->
 
-<!--&lt;!&ndash; Upload file modal &ndash;&gt;-->
-<!--<div th:replace="~{fragment/upload-file-modal :: uploadFileModal}"></div>-->
+<!-- Upload file modal -->
+<div th:replace="~{fragment/upload-file-modal :: uploadFileModal(fileUploadDto=${fileUploadDto})}"></div>
 
 <!--<div class="container-center2">-->
 <!--    <div class="row">-->
