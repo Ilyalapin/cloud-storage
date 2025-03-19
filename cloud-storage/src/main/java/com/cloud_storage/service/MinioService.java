@@ -256,7 +256,7 @@ public class MinioService {
 
     public void renameObject(RenameDto renameDto, ObjectReadDto rootFolder) throws MinioException {
         try {
-            ValidationUtil.validate(renameDto.getNewName());
+            ValidationUtil.validate(renameDto);
         } catch (RuntimeException e) {
             throw new InvalidParameterException(e.getMessage());
         }
@@ -337,7 +337,7 @@ public class MinioService {
                             .bucket(BUCKET_NAME)
                             .object(objectName)
                             .stream(
-                                    inputStream, -1, 3545)
+                                    inputStream, -1, 104857600)
                             .contentType(contentType)
                             .build());
         } catch (RuntimeException e) {
