@@ -17,10 +17,10 @@ public class FileSizeConverter {
     }
 
 
-    public static Long convertToBytes(String sizeString) {
-        sizeString = sizeString.replace(',', '.');
+    public static Long convertToBytes(String size) {
+        size = size.replace(',', '.');
 
-        String[] parts = sizeString.trim().split(" ");
+        String[] parts = size.trim().split(" ");
 
         double value;
         try {

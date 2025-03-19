@@ -6,8 +6,7 @@
 <body>
 <div th:fragment="buttons(name,isDir,index)">
     <div class="buttons">
-
-        <form th:action="@{/storage/download}" th:method="post" th:object="${objectCreateDto}">
+        <form th:action="@{/storage/downloadFile}" th:method="get" th:object="${objectDto}">
             <input type="hidden" name="path" th:value="${param.path}">
             <input type="hidden" name="name" th:value="${object.getName()}">
             <button type="submit" class="btn btn-outline-secondary btn-sm">
@@ -40,9 +39,9 @@
                 </div>
 
                 <div>
-                    <form th:action="@{/storage/deleteFolder}" th:method="delete" th:object="${folderDeleteDto}">
+                    <form th:action="@{/storage/delete}" th:method="delete" th:object="${objectDeleteDto}">
                         <input name="path" th:value="${object.getPath()}" type="hidden">
-                        <input type="hidden" name="folderName" th:value="${object.getName()}">
+                        <input type="hidden" name="objectName" th:value="${object.getName()}">
                         <button type="submit" class="dropdown-item btn text-danger">Delete</button>
                     </form>
                 </div>
@@ -50,6 +49,5 @@
         </div>
     </div>
 </div>
-
 </body>
 </html>

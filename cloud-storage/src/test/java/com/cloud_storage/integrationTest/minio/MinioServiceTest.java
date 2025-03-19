@@ -163,10 +163,9 @@ public class MinioServiceTest {
     @Test
     void UploadFileSuccessfully() throws Exception {
         String rootFolderName = "user-111-files";
-        ObjectReadDto rootFolder = minioService.createRootFolder(rootFolderName, "/");
+        minioService.createRootFolder(rootFolderName, "/");
         String path = "user-111-files/folder/";
-
-        ObjectReadDto testFolder = minioService.createFolder("folder","user-111-files/");
+        minioService.createFolder("folder","user-111-files/");
 
         List<MultipartFile> files = new ArrayList<>();
 
@@ -180,15 +179,14 @@ public class MinioServiceTest {
         when(mockFile1.getInputStream()).thenReturn(inputStream);
 
         files.add(mockFile1);
-
         FileUploadDto testDto = new FileUploadDto(path,files);
+
         minioService.uploadFile(testDto);
         List<ObjectReadDto> objects = minioService.getObjects(path);
+
         Assertions.assertEquals(1, objects.size());
         Assertions.assertEquals(mockFile1.getOriginalFilename(), objects.get(0).getName());
         Assertions.assertEquals(objects.get(0).getSize(), "13,00 b");
-
-//        String folderSize = minioService.getSize(path);
     }
 }
 
