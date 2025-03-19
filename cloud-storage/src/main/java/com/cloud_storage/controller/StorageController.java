@@ -105,7 +105,7 @@ public class StorageController {
             minioService.renameObject(renameDto, rootFolder);
         } catch (InvalidParameterException e) {
             log.error(e.getMessage());
-            redirectAttributes.addFlashAttribute("error", "Error renaming folder. " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error renaming. " + e.getMessage());
         } catch (MinioException e) {
             log.error("Error renaming folder: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
