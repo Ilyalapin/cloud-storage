@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FolderDeleteDto {
+public class ObjectDeleteDto {
 
-    private String folderName;
+    private String objectName;
 
     private String path;
 }

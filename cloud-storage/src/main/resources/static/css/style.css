@@ -254,6 +254,9 @@ h4 {
     text-decoration: underline;
     color: black;
 }
+.file-name:hover {
+    color: #696969;
+}
 .folder-size, .file-size {
     display: block;
     align-items: center;

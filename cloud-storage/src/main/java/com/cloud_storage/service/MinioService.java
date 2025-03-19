@@ -1,5 +1,6 @@
 package com.cloud_storage.service;
 
+import com.cloud_storage.common.exception.FileOperationException;
 import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.common.exception.NotFoundException;
@@ -7,6 +8,7 @@ import com.cloud_storage.common.util.FileSizeConverter;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.common.util.ValidationUtil;
 import com.cloud_storage.dto.FileUploadDto;
+import com.cloud_storage.dto.ObjectDto;
 import com.cloud_storage.dto.ObjectReadDto;
 import com.cloud_storage.dto.RenameDto;
 import io.minio.*;
@@ -15,10 +17,12 @@ import io.minio.messages.Item;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -97,7 +101,7 @@ public class MinioService {
                     folderName,
                     true,
                     path + folderName + "/",
-                    getSize(path + folderName + "/")
+                    "0"
             );
         } catch (Exception e) {
             throw new MinioException("Error to create a folder", e);
@@ -140,14 +144,14 @@ public class MinioService {
                         totalSize += FileSizeConverter.convertToBytes(subObject.getSize());
                     }
                     ObjectReadDto directoryObject = new ObjectReadDto(
-                            PrefixGenerationUtil.generateFolderNameForView(item.objectName()),
+                            PrefixGenerationUtil.generateFolderName(item.objectName()),
                             true,
                             path,
                             FileSizeConverter.convert(totalSize));
                     objects.add(directoryObject);
                 } else {
                     ObjectReadDto object = new ObjectReadDto(
-                            PrefixGenerationUtil.generateFolderNameForView(item.objectName()),
+                            PrefixGenerationUtil.generateFolderName(item.objectName()),
                             false,
                             path,
                             FileSizeConverter.convert(item.size()));
@@ -225,9 +229,6 @@ public class MinioService {
 
     private void delete(String fullName) throws MinioException {
         try {
-            if (!fullName.endsWith("/")) {
-                fullName += "/";
-            }
             RemoveObjectArgs args = RemoveObjectArgs.builder()
                     .bucket(BUCKET_NAME)
                     .object(fullName)
@@ -259,13 +260,19 @@ public class MinioService {
         } catch (RuntimeException e) {
             throw new InvalidParameterException(e.getMessage());
         }
-
         renameDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(renameDto.getPath(), rootFolder));
-        copy(renameDto, rootFolder.getName());
-        deleteObject(renameDto.getPath() + renameDto.getOldName() + "/");
+
+        if (renameDto.getIsDir().equals(String.valueOf(true))) {
+            copyFolder(renameDto, rootFolder.getName());
+            deleteObject(renameDto.getPath() + renameDto.getOldName() + "/");
+        } else {
+            copyFile(renameDto, rootFolder.getName());
+            deleteObject(renameDto.getPath() + renameDto.getOldName());
+        }
     }
 
-    private void copy(RenameDto renameDto, String path) throws MinioException {
+
+    private void copyFolder(RenameDto renameDto, String path) throws MinioException {
         try {
             List<ObjectReadDto> objects = getObjects(renameDto.getPath() + renameDto.getOldName() + "/");
             log.warn("Objects found: {}", objects);
@@ -273,7 +280,6 @@ public class MinioService {
             if (!objects.iterator().hasNext()) {
                 createFolder(renameDto.getNewName(), path);
             } else {
-
                 ObjectReadDto newFolder = createFolder(renameDto.getNewName(), path);
 
                 for (ObjectReadDto object : objects) {
@@ -283,25 +289,29 @@ public class MinioService {
                             object.getPath(),
                             String.valueOf(object.isDir())
                     );
-                    ObjectReadDto folder = createFolder(object.getName(), newFolder.getPath());
-                    copy(childDto, PrefixGenerationUtil.generateNewPathForCopyObject(folder.getPath()));
+
+                    if (object.isDir()) {
+                        ObjectReadDto folder = createFolder(object.getName(), newFolder.getPath());
+                        copyFolder(childDto, PrefixGenerationUtil.generateNewPathForCopyObject(folder.getPath()));
+                    } else {
+                        copyFile(childDto, newFolder.getPath());
+                    }
                 }
             }
-
         } catch (Exception e) {
             throw new MinioException("Error while copying object", e);
         }
     }
 
 
-    private void copyObject(RenameDto renameDto) throws MinioException {
+    private void copyFile(RenameDto renameDto, String path) throws MinioException {
         try {
             minioClient.copyObject(CopyObjectArgs.builder()
                     .bucket(BUCKET_NAME)
-                    .object(renameDto.getNewName())
+                    .object(path + renameDto.getNewName())
                     .source(CopySource.builder()
                             .bucket(BUCKET_NAME)
-                            .object(renameDto.getPath() + renameDto.getOldName() + "/")
+                            .object(renameDto.getPath() + renameDto.getOldName())
                             .build())
                     .build());
         } catch (Exception e) {
@@ -309,60 +319,32 @@ public class MinioService {
         }
     }
 
-    public ObjectReadDto createFile(String newName, String path) throws MinioException {
-        try {
-            ValidationUtil.validate(newName);
-        } catch (RuntimeException e) {
-            throw new InvalidParameterException(e.getMessage());
-        }
-        try {
-            log.info("Creating file with name: {}", newName);
-            minioClient.putObject(PutObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(path + newName)
-                    .stream(new ByteArrayInputStream(new byte[]{}), 0, -1)
-                    .build());
-            log.trace("File:{} created successfully", newName);
-            return new ObjectReadDto(
-                    newName,
-                    false,
-                    path + newName,
-                    getSize(path + newName)
-            );
-        } catch (Exception e) {
-            throw new MinioException("Error to create a file", e);
-        }
-    }
 
-
-    //    public String getSize(String path) throws MinioException {
-//        StatObjectResponse metadata = getMetadata(path);
-//        return FileSizeConverter.convert(metadata.size());
-//    }
-    public String getSize(String path) throws MinioException {
-        long totalFileSize = 0;
-        try {
-            Iterable<Result<Item>> objects = getAllByPath(path);
-            for (Result<Item> object : objects) {
-                Item result = object.get();
-                totalFileSize += result.size();
+    public void uploadFile(FileUploadDto fileUploadDto) throws MinioException, IOException {
+            List<MultipartFile> files = fileUploadDto.getFiles();
+            for (MultipartFile file : files) {
+                putObject(
+                        fileUploadDto.getPath() + file.getOriginalFilename(),
+                        file.getContentType(),
+                        file.getInputStream());
             }
-            return FileSizeConverter.convert(totalFileSize);
-        } catch (Exception e) {
-            throw new MinioException("Error while getting file size", e);
-        }
     }
 
-
-    private StatObjectResponse getMetadata(String path) throws MinioException {
+    private void putObject(String objectName, String contentType, InputStream inputStream) throws MinioException {
         try {
-            StatObjectArgs args = StatObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(path)
-                    .build();
-            return minioClient.statObject(args);
-        } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(BUCKET_NAME)
+                            .object(objectName)
+                            .stream(
+                                    inputStream, -1, 3545)
+                            .contentType(contentType)
+                            .build());
+        } catch (RuntimeException e) {
+            throw new InvalidParameterException("Error uploading object. To upload files more than 100 Mb, make a paid subscription.");
+        }
+        catch (Exception e) {
+            throw new MinioException("Error in placing an object in storage", e);
         }
     }
 
@@ -389,66 +371,18 @@ public class MinioService {
     }
 
 
-    public void uploadFile(FileUploadDto fileUploadDto) throws MinioException {
-        try {
-            List<MultipartFile> files = fileUploadDto.getFiles();
-            for (MultipartFile file : files) {
-                putObject(
-                        fileUploadDto.getPath() + file.getOriginalFilename(),
-                        file.getContentType(),
-                        file.getInputStream());
-            }
+    public ByteArrayResource downloadFile(ObjectDto objectDto) {
+        GetObjectArgs getObjectArgs = GetObjectArgs.builder()
+                .bucket(BUCKET_NAME)
+                .object(objectDto.getPath() + objectDto.getName())
+                .build();
+        try (GetObjectResponse object = minioClient.getObject(getObjectArgs)) {
+            return new ByteArrayResource(object.readAllBytes());
         } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
+            throw new FileOperationException("There is an error while downloading the file, try again later");
         }
     }
 
-    public void putObject(String objectName, String contentType, InputStream inputStream) throws MinioException {
-        try {
-            minioClient.putObject(
-                    PutObjectArgs.builder()
-                            .bucket(BUCKET_NAME)
-                            .object(objectName)
-                            .stream(
-                                    inputStream, -1, 10485760)
-                            .contentType(contentType)
-                            .build());
-        } catch (Exception e) {
-            throw new MinioException("Error in placing an object in storage", e);
-        }
-    }
-
-
-    public InputStream get(String path) throws MinioException {
-        try {
-            GetObjectArgs args = GetObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(path)
-                    .build();
-            return minioClient.getObject(args);
-        } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
-        }
-    }
-
-    /* Этот метод позволяет получить метаданные группы объектов,например размер файла или дату последних изменений.
-     Возможно он мне не пригодится
-     */
-//     public Map<Path, StatObjectResponse> getMetadata(Iterable<Path> paths) {
-//     return StreamSupport.stream(paths.spliterator(), false)
-//     .map(path -> {
-//     try {
-//     StatObjectArgs args = StatObjectArgs.builder()
-//     .bucket(configurationProperties.getBucket())
-//     .object(path.toString())
-//     .build();
-//     return new HashMap.SimpleEntry<>(path, minioClient.statObject(args));
-//     } catch (Exception e) {
-//     throw new MinioFetchException("Error while parsing list of objects", e);
-//     }
-//     })
-//     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-//     }
     /*
      * Метод предназначен для загрузки объекта в хранилище MinIO без указания типа контента загружаемого файла.
      * Скорее всего будет использован для загрузки папок
@@ -465,25 +399,4 @@ public class MinioService {
             throw new MinioException("Error while fetching files in Minio", e);
         }
     }
-
-    /*
-     * Метод предназначен для загрузки объекта в хранилище MinIO с указанием типа контента загружаемого файла.
-     * Скорее всего будет использован для загрузки файлов
-     */
-    public void upload(Path source, InputStream file, String contentType) throws MinioException {
-        try {
-            PutObjectArgs args = PutObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(source.toString())
-                    .stream(file, file.available(), -1)
-                    .contentType(contentType)
-                    .build();
-
-            minioClient.putObject(args);
-        } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
-        }
-    }
-
-
 }

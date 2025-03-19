@@ -3,13 +3,14 @@ package com.cloud_storage.controller;
 import com.cloud_storage.common.UserPrincipal;
 import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.MinioException;
-import com.cloud_storage.common.exception.NotFoundException;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.dto.*;
 import com.cloud_storage.service.MinioService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -43,7 +44,7 @@ public class StorageController {
         model.addAttribute("userInfo", userPrincipal.getRole() + ": " + userPrincipal.getUsername());
         model.addAttribute("objectCreateDto", new ObjectDto("", PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder)));
         model.addAttribute("objects", objects);
-        model.addAttribute("folderDeleteDto", new FolderDeleteDto());
+        model.addAttribute("folderDeleteDto", new ObjectDeleteDto());
         model.addAttribute("renameDto", new RenameDto());
         model.addAttribute("path", PrefixGenerationUtil.generatePathBackForBreadCrumbs(path));
         model.addAttribute("breadCrumbs", PrefixGenerationUtil.generatePathForBreadCrumbs(path, rootFolder));
@@ -76,19 +77,20 @@ public class StorageController {
     }
 
 
-    @DeleteMapping("/deleteFolder")
-    public String deleteFolder(@ModelAttribute("folderDeleteDto") FolderDeleteDto folderDeleteDto,
+    @DeleteMapping("/delete")
+    public String deleteFolder(@ModelAttribute("objectDeleteDto") ObjectDeleteDto objectDeleteDto,
                                RedirectAttributes redirectAttributes) {
         try {
-            log.info("Attempting to delete folder: {}", folderDeleteDto.getFolderName());
-            minioService.deleteObject(folderDeleteDto.getPath() + folderDeleteDto.getFolderName() + "/");
+            log.info("Attempting to delete folder: {}", objectDeleteDto.getObjectName());
 
-            log.info("Folder with name:{} deleted successfully", folderDeleteDto.getFolderName());
+            minioService.deleteObject(objectDeleteDto.getPath() + objectDeleteDto.getObjectName());
+
+            log.info("Folder with name:{} deleted successfully", objectDeleteDto.getObjectName());
         } catch (Exception e) {
             log.error("Error deleting folder: {}", e.getMessage());
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/storage?path=" + folderDeleteDto.getPath();
+        return "redirect:/storage?path=" + objectDeleteDto.getPath();
     }
 
 
@@ -112,23 +114,6 @@ public class StorageController {
     }
 
 
-    @PostMapping("/download")
-    public String download(@ModelAttribute("objectCreateDto") ObjectDto objectDto,
-                           RedirectAttributes redirectAttributes) {
-        log.info("Received objectDto: {}", objectDto);
-        try {
-            minioService.getAndSave(objectDto.getPath(), objectDto.getName());
-        } catch (NotFoundException e) {
-            log.error("Error: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        } catch (MinioException e) {
-            log.error("Downloading error: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-        return "redirect:/storage?path=" + objectDto.getPath();
-    }
-
-
     @PostMapping("/uploadFile")
     public String uploadFile(@ModelAttribute("fileUploadDto") FileUploadDto fileUploadDto,
                              @RequestParam(required = false) String path,
@@ -136,9 +121,26 @@ public class StorageController {
         fileUploadDto.setPath(path);
         try {
             minioService.uploadFile(fileUploadDto);
-        } catch (MinioException e) {
+        } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/storage?path=" + fileUploadDto.getPath();
+    }
+
+
+    @GetMapping("/downloadFile")
+    public ResponseEntity<ByteArrayResource> readFile(@ModelAttribute("objectDto") ObjectDto objectDto,
+                                                      RedirectAttributes redirectAttributes){
+        log.info("Received objectDto: {}", objectDto);
+        ByteArrayResource file = null;
+        try {
+            file  = minioService.downloadFile(objectDto);
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=" + objectDto.getName())
+                .body(file);
     }
 }

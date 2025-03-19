@@ -30,7 +30,7 @@ public class PrefixGenerationUtil {
     }
 
 
-    public static String generateFolderNameForView(String obJectName) {
+    public static String generateFolderName(String obJectName) {
 
         if (obJectName == null || obJectName.isEmpty()) {
             return "folder";

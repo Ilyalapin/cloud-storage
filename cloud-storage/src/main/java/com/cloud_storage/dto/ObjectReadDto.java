@@ -15,7 +15,6 @@ public class ObjectReadDto {
 
     private String path;
 
-//        private Double size;
     private String size;
 
     public ObjectReadDto(String name, boolean isDir, String path) {
