@@ -1,13 +1,10 @@
 package com.cloud_storage.service;
 
-import com.cloud_storage.common.exception.FileOperationException;
-import com.cloud_storage.common.exception.InvalidParameterException;
-import com.cloud_storage.common.exception.MinioException;
-import com.cloud_storage.common.exception.NotFoundException;
+import com.cloud_storage.common.exception.*;
 import com.cloud_storage.common.util.FileSizeConverter;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.common.util.ValidationUtil;
-import com.cloud_storage.dto.FileUploadDto;
+import com.cloud_storage.dto.ObjectUploadDto;
 import com.cloud_storage.dto.ObjectDto;
 import com.cloud_storage.dto.ObjectReadDto;
 import com.cloud_storage.dto.RenameDto;
@@ -352,7 +349,7 @@ public class MinioService {
     }
 
 
-    public void uploadFile(FileUploadDto fileUploadDto) throws MinioException, IOException {
+    public void uploadFile(ObjectUploadDto fileUploadDto) throws MinioException, IOException {
         List<MultipartFile> files = fileUploadDto.getFiles();
         for (MultipartFile file : files) {
             putObject(
@@ -379,11 +376,45 @@ public class MinioService {
         }
     }
 
+
+    public void uploadFolder(ObjectUploadDto objectUploadDto) {
+        List<MultipartFile> files = objectUploadDto.getFiles();
+        try {
+            List<SnowballObject> objects = getSnowBallObjects(files, objectUploadDto.getPath());
+
+            minioClient.uploadSnowballObjects(UploadSnowballObjectsArgs.builder()
+                    .bucket(BUCKET_NAME)
+                    .objects(objects)
+                    .build());
+        }
+        catch (Exception e) {
+            throw new FolderOperationException("There is an error while uploading the folder, try again later");
+        }
+    }
+
+
+    private List<SnowballObject> getSnowBallObjects(List<MultipartFile> files, String path) throws IOException {
+        List<SnowballObject> objects = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            if (file.getOriginalFilename() == null || file.getOriginalFilename().isBlank()) {
+                continue;
+            }
+            SnowballObject snowballObject = new SnowballObject(
+                    path + file.getOriginalFilename(),
+                    file.getInputStream(),
+                    file.getSize(),
+                    null
+            );
+            objects.add(snowballObject);
+        }
+        return objects;
+    }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /*
      * Метод getAndSave предназначен для загрузки объекта из хранилища MinIO и сохранения его на локальной файловой системе.
      */
-    public void getAndSave(String path, String objectName) throws MinioException {
+    public void downloadFolder(String path, String objectName) throws MinioException {
 
         List<ObjectReadDto> objects = getObjects(path + objectName + "/");
         if (objects.isEmpty()) {
@@ -411,23 +442,6 @@ public class MinioService {
             return new ByteArrayResource(object.readAllBytes());
         } catch (Exception e) {
             throw new FileOperationException("There is an error while downloading the file, try again later");
-        }
-    }
-
-    /*
-     * Метод предназначен для загрузки объекта в хранилище MinIO без указания типа контента загружаемого файла.
-     * Скорее всего будет использован для загрузки папок
-     */
-    public void upload(Path source, InputStream file) throws MinioException {
-        try {
-            PutObjectArgs args = PutObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(source.toString())
-                    .stream(file, file.available(), -1)
-                    .build();
-            minioClient.putObject(args);
-        } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
         }
     }
 }

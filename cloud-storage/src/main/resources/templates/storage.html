@@ -214,10 +214,10 @@
 <div th:replace="~{fragment/create-folder-modal :: createFolderModal}"></div>
 
 <!-- Upload folder modal -->
-<!--<div th:replace="~{fragment/upload-folder-modal :: uploadFolderModal}"></div>-->
+<div th:replace="~{fragment/upload-folder-modal :: uploadFolderModal(objectUploadDto=${objectUploadDto})}"></div>
 
 <!-- Upload file modal -->
-<div th:replace="~{fragment/upload-file-modal :: uploadFileModal(fileUploadDto=${fileUploadDto})}"></div>
+<div th:replace="~{fragment/upload-file-modal :: uploadFileModal(objectUploadDto=${objectUploadDto})}"></div>
 
 </body>
 </html>

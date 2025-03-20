@@ -48,7 +48,7 @@ public class StorageController {
         model.addAttribute("renameDto", new RenameDto());
         model.addAttribute("path", PrefixGenerationUtil.generatePathBackForBreadCrumbs(path));
         model.addAttribute("breadCrumbs", PrefixGenerationUtil.generatePathForBreadCrumbs(path, rootFolder));
-        model.addAttribute("fileUploadDto", new FileUploadDto(PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder), null));
+        model.addAttribute("objectUploadDto", new ObjectUploadDto(PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder), null));
         session.setAttribute("rootFolder", rootFolder);
 
         return "storage";
@@ -115,21 +115,35 @@ public class StorageController {
 
 
     @PostMapping("/uploadFile")
-    public String uploadFile(@ModelAttribute("fileUploadDto") FileUploadDto fileUploadDto,
+    public String uploadFile(@ModelAttribute("objectUploadDto") ObjectUploadDto fileUpload,
                              @RequestParam(required = false) String path,
                              RedirectAttributes redirectAttributes) {
-        fileUploadDto.setPath(path);
+        fileUpload.setPath(path);
         try {
-            minioService.uploadFile(fileUploadDto);
+            minioService.uploadFile(fileUpload);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/storage?path=" + fileUploadDto.getPath();
+        return "redirect:/storage?path=" + fileUpload.getPath();
+    }
+
+
+    @PostMapping("/uploadFolder")
+    public String uploadFolder(@ModelAttribute("objectUploadDto") ObjectUploadDto folderUpload,
+                             @RequestParam(required = false) String path,
+                             RedirectAttributes redirectAttributes) {
+        folderUpload.setPath(path);
+        try {
+            minioService.uploadFolder(folderUpload);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/storage?path=" + folderUpload.getPath();
     }
 
 
     @GetMapping("/downloadFile")
-    public ResponseEntity<ByteArrayResource> readFile(@ModelAttribute("objectDto") ObjectDto objectDto,
+    public ResponseEntity<ByteArrayResource> downloadFile(@ModelAttribute("objectDto") ObjectDto objectDto,
                                                       RedirectAttributes redirectAttributes) {
         log.info("Received objectDto: {}", objectDto);
         ByteArrayResource file = null;
@@ -143,6 +157,23 @@ public class StorageController {
                 .header("Content-Disposition", "attachment; filename=" + objectDto.getName())
                 .body(file);
     }
+
+
+//    @GetMapping("/downloadFolder")
+//    public ResponseEntity<ByteArrayResource> downloadFolder(@ModelAttribute("objectDto") ObjectDto objectDto,
+//                                                      RedirectAttributes redirectAttributes) {
+//        log.info("Received objectDto: {}", objectDto);
+//        ByteArrayResource file = null;
+//        try {
+//            file = minioService.downloadFile(objectDto);
+//
+//        } catch (Exception e) {
+//            redirectAttributes.addFlashAttribute("error", e.getMessage());
+//        }
+//        return ResponseEntity.ok()
+//                .header("Content-Disposition", "attachment; filename=" + objectDto.getName())
+//                .body(file);
+//    }
 
 
     @GetMapping("/search")
@@ -165,7 +196,7 @@ public class StorageController {
         model.addAttribute("renameDto", new RenameDto());
         model.addAttribute("path", PrefixGenerationUtil.generatePathBackForBreadCrumbs(""));
         model.addAttribute("breadCrumbs", PrefixGenerationUtil.generatePathForBreadCrumbs("", rootFolder));
-        model.addAttribute("fileUploadDto", new FileUploadDto(PrefixGenerationUtil.generateIfPathIsEmpty("", rootFolder), null));
+        model.addAttribute("objectUploadDto", new ObjectUploadDto(PrefixGenerationUtil.generateIfPathIsEmpty("", rootFolder), null));
         return "storage";
     }
 }

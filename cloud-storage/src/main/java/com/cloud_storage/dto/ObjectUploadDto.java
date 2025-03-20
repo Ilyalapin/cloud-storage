@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FileUploadDto {
+public class ObjectUploadDto {
 
     private String path;
 

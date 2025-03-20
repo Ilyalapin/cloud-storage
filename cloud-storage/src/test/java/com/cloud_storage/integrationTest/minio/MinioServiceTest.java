@@ -1,6 +1,6 @@
 package com.cloud_storage.integrationTest.minio;
 
-import com.cloud_storage.dto.FileUploadDto;
+import com.cloud_storage.dto.ObjectUploadDto;
 import com.cloud_storage.dto.ObjectReadDto;
 import com.cloud_storage.dto.RenameDto;
 import com.cloud_storage.integrationTest.config.MinioServiceTestConfig;
@@ -178,7 +178,7 @@ public class MinioServiceTest {
         when(mockFile1.getInputStream()).thenReturn(inputStream);
 
         files.add(mockFile1);
-        FileUploadDto testDto = new FileUploadDto(path,files);
+        ObjectUploadDto testDto = new ObjectUploadDto(path,files);
 
         minioService.uploadFile(testDto);
         List<ObjectReadDto> objects = minioService.getObjects(path);
