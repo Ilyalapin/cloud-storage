@@ -130,11 +130,11 @@ public class StorageController {
 
     @GetMapping("/downloadFile")
     public ResponseEntity<ByteArrayResource> readFile(@ModelAttribute("objectDto") ObjectDto objectDto,
-                                                      RedirectAttributes redirectAttributes){
+                                                      RedirectAttributes redirectAttributes) {
         log.info("Received objectDto: {}", objectDto);
         ByteArrayResource file = null;
         try {
-            file  = minioService.downloadFile(objectDto);
+            file = minioService.downloadFile(objectDto);
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -142,5 +142,30 @@ public class StorageController {
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=" + objectDto.getName())
                 .body(file);
+    }
+
+
+    @GetMapping("/search")
+    public String showSearchResults(@ModelAttribute("searchName") String searchName,
+                                    HttpSession session,
+                                    RedirectAttributes redirectAttributes,
+                                    Model model,
+                                    @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        ObjectReadDto rootFolder = (ObjectReadDto) session.getAttribute("rootFolder");
+        try {
+            List<ObjectReadDto> searchResults = minioService.findByName(searchName, rootFolder.getName());
+            model.addAttribute("objects", searchResults);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        model.addAttribute("userInfo", userPrincipal.getRole() + ": " + userPrincipal.getUsername());
+        model.addAttribute("objectCreateDto", new ObjectDto("", PrefixGenerationUtil.generateIfPathIsEmpty("", rootFolder)));
+        model.addAttribute("folderDeleteDto", new ObjectDeleteDto());
+        model.addAttribute("renameDto", new RenameDto());
+        model.addAttribute("path", PrefixGenerationUtil.generatePathBackForBreadCrumbs(""));
+        model.addAttribute("breadCrumbs", PrefixGenerationUtil.generatePathForBreadCrumbs("", rootFolder));
+        model.addAttribute("fileUploadDto", new FileUploadDto(PrefixGenerationUtil.generateIfPathIsEmpty("", rootFolder), null));
+        return "storage";
     }
 }
