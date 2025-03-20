@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
 </head>
 <body>
-<div th:fragment="uploadFileModal(fileUploadDto)">
+<div th:fragment="uploadFileModal(objectUploadDto)">
     <div class="modal fade" id="uploadFileModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -13,8 +13,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="/storage/uploadFile" th:method="post" id="fileUploadForm" th:object="${fileUploadDto}" enctype="multipart/form-data">
-                        <input type="hidden" name="path" th:value="${fileUploadDto.getPath()}">
+                    <form action="/storage/uploadFile" th:method="post" id="fileUploadForm" th:object="${objectUploadDto}" enctype="multipart/form-data">
+                        <input type="hidden" name="path" th:value="${objectUploadDto.getPath()}">
                         <input type="file" th:name="files" class="form-control" required multiple>
                     </form>
                 </div>
