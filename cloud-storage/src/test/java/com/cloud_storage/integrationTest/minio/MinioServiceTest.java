@@ -1,6 +1,5 @@
 package com.cloud_storage.integrationTest.minio;
 
-import com.cloud_storage.common.util.FileSizeConverter;
 import com.cloud_storage.dto.FileUploadDto;
 import com.cloud_storage.dto.ObjectReadDto;
 import com.cloud_storage.dto.RenameDto;

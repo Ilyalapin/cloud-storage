@@ -109,6 +109,38 @@ public class MinioService {
     }
 
 
+    public List<ObjectReadDto> findByName(String searchName, String path) throws MinioException {
+        List<ObjectReadDto> allObjects = getObjects(path);
+        List<ObjectReadDto> foundObjects = new ArrayList<>();
+        try {
+            for (ObjectReadDto object : allObjects) {
+                if (object.getName().toLowerCase().contains(searchName.toLowerCase())) {
+                    foundObjects.add(object);
+                }
+                if (object.isDir()) {
+                    findChildObjects(searchName, object, foundObjects);
+                }
+            }
+        } catch (Exception e) {
+            throw new NotFoundException("Search by name: " + searchName + " did not give results.");
+        }
+        return foundObjects;
+    }
+
+
+    private void findChildObjects(String searchName, ObjectReadDto parentObject, List<ObjectReadDto> foundObjects) throws MinioException {
+        List<ObjectReadDto> childObjects = getObjects(parentObject.getPath() + parentObject.getName() + "/");
+        for (ObjectReadDto childObject : childObjects) {
+            if (childObject.getName().toLowerCase().contains(searchName.toLowerCase())) {
+                foundObjects.add(childObject);
+            }
+            if (childObject.isDir()) {
+                findChildObjects(searchName, childObject, foundObjects);
+            }
+        }
+    }
+
+
     private Iterable<Result<Item>> findObjects(String path) {
         return minioClient.listObjects(
                 ListObjectsArgs.builder()
@@ -263,10 +295,10 @@ public class MinioService {
         renameDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(renameDto.getPath(), rootFolder));
 
         if (renameDto.getIsDir().equals(String.valueOf(true))) {
-            copyFolder(renameDto, rootFolder.getName());
+            copyFolder(renameDto, renameDto.getPath());
             deleteObject(renameDto.getPath() + renameDto.getOldName() + "/");
         } else {
-            copyFile(renameDto, rootFolder.getName());
+            copyFile(renameDto, renameDto.getPath());
             deleteObject(renameDto.getPath() + renameDto.getOldName());
         }
     }
@@ -321,13 +353,13 @@ public class MinioService {
 
 
     public void uploadFile(FileUploadDto fileUploadDto) throws MinioException, IOException {
-            List<MultipartFile> files = fileUploadDto.getFiles();
-            for (MultipartFile file : files) {
-                putObject(
-                        fileUploadDto.getPath() + file.getOriginalFilename(),
-                        file.getContentType(),
-                        file.getInputStream());
-            }
+        List<MultipartFile> files = fileUploadDto.getFiles();
+        for (MultipartFile file : files) {
+            putObject(
+                    fileUploadDto.getPath() + file.getOriginalFilename(),
+                    file.getContentType(),
+                    file.getInputStream());
+        }
     }
 
     private void putObject(String objectName, String contentType, InputStream inputStream) throws MinioException {
@@ -342,8 +374,7 @@ public class MinioService {
                             .build());
         } catch (RuntimeException e) {
             throw new InvalidParameterException("Error uploading object. To upload files more than 100 Mb, make a paid subscription.");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new MinioException("Error in placing an object in storage", e);
         }
     }
