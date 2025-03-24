@@ -6,6 +6,7 @@ import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.dto.*;
 import com.cloud_storage.service.MinioService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ import java.util.List;
 @RequestMapping("/storage")
 @RequiredArgsConstructor
 @Slf4j
-public class StorageController {
+public class StorageController extends BaseController {
     private final MinioService minioService;
 
     @GetMapping("/guest-page")
@@ -41,14 +42,9 @@ public class StorageController {
 
         List<ObjectReadDto> objects = minioService.getObjects(PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder));
 
-        model.addAttribute("userInfo", userPrincipal.getRole() + ": " + userPrincipal.getUsername());
-        model.addAttribute("objectCreateDto", new ObjectDto("", PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder)));
         model.addAttribute("objects", objects);
-        model.addAttribute("folderDeleteDto", new ObjectDeleteDto());
-        model.addAttribute("renameDto", new RenameDto());
-        model.addAttribute("path", PrefixGenerationUtil.generatePathBackForBreadCrumbs(path));
-        model.addAttribute("breadCrumbs", PrefixGenerationUtil.generatePathForBreadCrumbs(path, rootFolder));
-        model.addAttribute("objectUploadDto", new ObjectUploadDto(PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder), null));
+        model.addAttribute("searchDto", new SearchDto());
+        submitToModel(model, userPrincipal, rootFolder);
         session.setAttribute("rootFolder", rootFolder);
 
         return "storage";
@@ -56,14 +52,12 @@ public class StorageController {
 
 
     @PostMapping
-    public String createFolder(@RequestParam(required = false) String path,
-                               @ModelAttribute("objectCreateDto") ObjectDto objectDto,
+    public String createFolder(@ModelAttribute("objectCreateDto") ObjectDto objectDto,
+                               HttpSession session,
                                RedirectAttributes redirectAttributes) {
         try {
-            log.info("Creating new folder, folderName: {}, path: {}", objectDto.getName(), path);
-
-            objectDto.setPath(path);
-            ObjectReadDto newFolder = minioService.createFolder(objectDto.getName(), objectDto.getPath());
+            log.info("Creating new folder, folderName: {}, path: {}", objectDto.getName(), objectDto.getPath());
+            ObjectReadDto newFolder = minioService.createFolder(objectDto.getName(), objectDto.getPath(), getRootFolder(session));
 
             log.info("Folder created: {}", newFolder);
         } catch (InvalidParameterException e) {
@@ -95,14 +89,12 @@ public class StorageController {
 
 
     @PatchMapping("/rename")
-    public String rename(@ModelAttribute("renameDto") RenameDto renameDto,
+    public String rename(@ModelAttribute("renameDto") ObjectRenameDto renameDto,
                          HttpSession session,
                          RedirectAttributes redirectAttributes) {
         log.info("Received renameDto: {}", renameDto);
         try {
-            ObjectReadDto rootFolder = (ObjectReadDto) session.getAttribute("rootFolder");
-
-            minioService.renameObject(renameDto, rootFolder);
+            minioService.renameObject(renameDto, getRootFolder(session));
         } catch (InvalidParameterException e) {
             log.error(e.getMessage());
             redirectAttributes.addFlashAttribute("error", "Error renaming. " + e.getMessage());
@@ -116,11 +108,10 @@ public class StorageController {
 
     @PostMapping("/uploadFile")
     public String uploadFile(@ModelAttribute("objectUploadDto") ObjectUploadDto fileUpload,
-                             @RequestParam(required = false) String path,
+                             HttpSession session,
                              RedirectAttributes redirectAttributes) {
-        fileUpload.setPath(path);
         try {
-            minioService.uploadFile(fileUpload);
+            minioService.uploadFile(fileUpload, getRootFolder(session));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -130,11 +121,10 @@ public class StorageController {
 
     @PostMapping("/uploadFolder")
     public String uploadFolder(@ModelAttribute("objectUploadDto") ObjectUploadDto folderUpload,
-                             @RequestParam(required = false) String path,
-                             RedirectAttributes redirectAttributes) {
-        folderUpload.setPath(path);
+                               HttpSession session,
+                               RedirectAttributes redirectAttributes) {
         try {
-            minioService.uploadFolder(folderUpload);
+            minioService.uploadFolder(folderUpload, getRootFolder(session));
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
@@ -144,11 +134,12 @@ public class StorageController {
 
     @GetMapping("/downloadFile")
     public ResponseEntity<ByteArrayResource> downloadFile(@ModelAttribute("objectDto") ObjectDto objectDto,
-                                                      RedirectAttributes redirectAttributes) {
+                                                          HttpSession session,
+                                                          RedirectAttributes redirectAttributes) {
         log.info("Received objectDto: {}", objectDto);
         ByteArrayResource file = null;
         try {
-            file = minioService.downloadFile(objectDto);
+            file = minioService.downloadFile(objectDto, getRootFolder(session));
 
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -156,47 +147,45 @@ public class StorageController {
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=" + objectDto.getName())
                 .body(file);
+
     }
-
-
-//    @GetMapping("/downloadFolder")
-//    public ResponseEntity<ByteArrayResource> downloadFolder(@ModelAttribute("objectDto") ObjectDto objectDto,
-//                                                      RedirectAttributes redirectAttributes) {
-//        log.info("Received objectDto: {}", objectDto);
-//        ByteArrayResource file = null;
-//        try {
-//            file = minioService.downloadFile(objectDto);
-//
-//        } catch (Exception e) {
-//            redirectAttributes.addFlashAttribute("error", e.getMessage());
-//        }
-//        return ResponseEntity.ok()
-//                .header("Content-Disposition", "attachment; filename=" + objectDto.getName())
-//                .body(file);
-//    }
 
 
     @GetMapping("/search")
     public String showSearchResults(@ModelAttribute("searchName") String searchName,
+                                    @ModelAttribute("searchDto") SearchDto searchDto,
                                     HttpSession session,
                                     RedirectAttributes redirectAttributes,
                                     Model model,
                                     @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        ObjectReadDto rootFolder = (ObjectReadDto) session.getAttribute("rootFolder");
+        ObjectReadDto rootFolder = getRootFolder(session);
         try {
-            List<ObjectReadDto> searchResults = minioService.findByName(searchName, rootFolder.getName());
+            List<SearchDto> searchResults = minioService.findByName(searchDto, getRootFolder(session));
+
             model.addAttribute("objects", searchResults);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
+        submitToModel(model, userPrincipal, rootFolder);
 
-        model.addAttribute("userInfo", userPrincipal.getRole() + ": " + userPrincipal.getUsername());
-        model.addAttribute("objectCreateDto", new ObjectDto("", PrefixGenerationUtil.generateIfPathIsEmpty("", rootFolder)));
-        model.addAttribute("folderDeleteDto", new ObjectDeleteDto());
-        model.addAttribute("renameDto", new RenameDto());
-        model.addAttribute("path", PrefixGenerationUtil.generatePathBackForBreadCrumbs(""));
-        model.addAttribute("breadCrumbs", PrefixGenerationUtil.generatePathForBreadCrumbs("", rootFolder));
-        model.addAttribute("objectUploadDto", new ObjectUploadDto(PrefixGenerationUtil.generateIfPathIsEmpty("", rootFolder), null));
+
         return "storage";
+    }
+
+
+    @GetMapping("/downloadFolder")
+    public void downloadFolder(@ModelAttribute("objectDto") ObjectDto objectDto,
+                               RedirectAttributes redirectAttributes,
+                               HttpSession session,
+                               HttpServletResponse response) {
+
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setHeader("Content-Disposition", "attachment; filename=" + objectDto.getName()+".zip");
+        try {
+            minioService.downloadFolder(objectDto, response.getOutputStream(), getRootFolder(session));
+        } catch (Exception e) {
+            log.warn("Failed to download folder", e);
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
     }
 }

@@ -15,10 +15,7 @@
                 <div class="modal-body">
                     <form action="/storage/uploadFolder" th:method="post" id="folderUploadForm" th:object="${objectUploadDto}" enctype="multipart/form-data">
                         <input type="hidden" name="path" th:value="${objectUploadDto.getPath()}">
-<!--                        <input type="file" th:name="files" class="form-control" required multiple>-->
-
                         <input type="file" th:name="files" class="form-control" required multiple webkitdirectory>
-
                     </form>
                 </div>
                 <div class="modal-footer">

@@ -3,16 +3,17 @@ package com.cloud_storage.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ObjectDto {
+public class ObjectRenameDto {
 
-    private String name;
+    private String oldName;
+
+    private String newName;
 
     private String path;
+
+    private String isDir;
 }

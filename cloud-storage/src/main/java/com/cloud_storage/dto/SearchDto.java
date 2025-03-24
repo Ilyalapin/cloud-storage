@@ -7,13 +7,15 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RenameDto {
+public class SearchDto {
 
-    private String oldName;
+    private String name;
 
-    private String newName;
+    private boolean isDir;
 
     private String path;
 
-    private String isDir;
+    private String size;
+
+    private boolean isSearchResult = false;
 }

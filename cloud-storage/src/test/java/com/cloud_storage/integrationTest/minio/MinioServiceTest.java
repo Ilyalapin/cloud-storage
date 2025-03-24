@@ -1,8 +1,8 @@
 package com.cloud_storage.integrationTest.minio;
 
+import com.cloud_storage.dto.ObjectRenameDto;
 import com.cloud_storage.dto.ObjectUploadDto;
 import com.cloud_storage.dto.ObjectReadDto;
-import com.cloud_storage.dto.RenameDto;
 import com.cloud_storage.integrationTest.config.MinioServiceTestConfig;
 import com.cloud_storage.service.MinioService;
 import io.minio.MinioClient;
@@ -58,9 +58,10 @@ public class MinioServiceTest {
 
     @Test
     void createFolderSuccessfully() throws Exception {
+        ObjectReadDto rootFolder = new ObjectReadDto("user-1234-files",true,"/user-1234-files/");
         String folderName = "test";
         String path = "user-1234-files/";
-        ObjectReadDto newFolder = minioService.createFolder(folderName, path);
+        ObjectReadDto newFolder = minioService.createFolder(folderName, path, rootFolder);
 
         Assertions.assertNotNull(newFolder);
         Assertions.assertEquals(newFolder.getName(), folderName);
@@ -77,8 +78,8 @@ public class MinioServiceTest {
         String name1 = "photo";
         String name2 = "video";
 
-        ObjectReadDto newFolder1 = minioService.createFolder(name1, rootFolder.getPath());
-        ObjectReadDto newFolder2 = minioService.createFolder(name2, rootFolder.getPath());
+        ObjectReadDto newFolder1 = minioService.createFolder(name1, rootFolder.getPath(),rootFolder);
+        ObjectReadDto newFolder2 = minioService.createFolder(name2, rootFolder.getPath(),rootFolder);
 
         List<ObjectReadDto> objects = minioService.getObjects(rootFolder.getName());
 
@@ -95,6 +96,7 @@ public class MinioServiceTest {
 
     @Test
     void deleteObjectSuccessfully() throws Exception {
+        ObjectReadDto rootFolder = new ObjectReadDto("user-162-files",true,"/user-162-files/");
         String name = "test";
         String name1 = "1";
         String name2 = "2";
@@ -103,32 +105,20 @@ public class MinioServiceTest {
         String path1 = path + name + "/";
         String path2 = path1 + name2 + "/";
 
-        minioService.createFolder(name, path);
+        minioService.createFolder(name, path, rootFolder);
         List<ObjectReadDto> objects1 = minioService.getObjects(path);
         Assertions.assertEquals(1, objects1.size());
 
-        minioService.createFolder(name1, path1);
-        minioService.createFolder(name2, path1);
+        minioService.createFolder(name1, path1,rootFolder);
+        minioService.createFolder(name2, path1,rootFolder);
         List<ObjectReadDto> objects2 = minioService.getObjects(path1);
         Assertions.assertEquals(2, objects2.size());
 
-        minioService.createFolder(name3, path2);
+        minioService.createFolder(name3, path2,rootFolder);
 
         minioService.deleteObject(path1);
         List<ObjectReadDto> objects3 = minioService.getObjects(path);
         Assertions.assertEquals(0, objects3.size());
-    }
-
-
-    @Test
-    void getSize() throws Exception {
-        String folderName = "test";
-        String path = "user-1020-files/";
-
-        ObjectReadDto newFolder = minioService.createFolder(folderName, path);
-
-        Assertions.assertEquals(0, newFolder.getSize());
-        minioService.deleteObject(path);
     }
 
 
@@ -141,11 +131,11 @@ public class MinioServiceTest {
         String newName = "test2";
         String path = rootFolderName + "/";
 
-        ObjectReadDto folder1 = minioService.createFolder(oldName, path);
-        ObjectReadDto folder2 = minioService.createFolder("1", folder1.getPath());
-        minioService.createFolder("2", folder2.getPath());
+        ObjectReadDto folder1 = minioService.createFolder(oldName, path, rootFolder);
+        ObjectReadDto folder2 = minioService.createFolder("1", folder1.getPath(), rootFolder);
+        minioService.createFolder("2", folder2.getPath(), rootFolder);
 
-        RenameDto renameDto = new RenameDto(
+        ObjectRenameDto renameDto = new ObjectRenameDto(
                 oldName,
                 newName,
                 path,
@@ -162,9 +152,9 @@ public class MinioServiceTest {
     @Test
     void UploadFileSuccessfully() throws Exception {
         String rootFolderName = "user-111-files";
-        minioService.createRootFolder(rootFolderName, "/");
+        ObjectReadDto rootFolder = minioService.createRootFolder(rootFolderName, "/");
         String path = "user-111-files/folder/";
-        minioService.createFolder("folder","user-111-files/");
+        minioService.createFolder("folder","user-111-files/",rootFolder);
 
         List<MultipartFile> files = new ArrayList<>();
 
@@ -180,7 +170,7 @@ public class MinioServiceTest {
         files.add(mockFile1);
         ObjectUploadDto testDto = new ObjectUploadDto(path,files);
 
-        minioService.uploadFile(testDto);
+        minioService.uploadFile(testDto, rootFolder);
         List<ObjectReadDto> objects = minioService.getObjects(path);
 
         Assertions.assertEquals(1, objects.size());

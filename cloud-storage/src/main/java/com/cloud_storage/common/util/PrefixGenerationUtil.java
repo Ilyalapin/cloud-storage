@@ -43,6 +43,18 @@ public class PrefixGenerationUtil {
         return folderName.replaceAll("/$", "");
     }
 
+    public static String removePrefixForZipDirectory(String fullPath) {
+        if (fullPath == null || fullPath.isEmpty()) {
+            return "folder";
+        }
+
+        int firstSlashIndex = fullPath.indexOf("/");
+        String intermediatePath = fullPath.substring(firstSlashIndex + 1);
+
+        int secondSlashIndex = intermediatePath.indexOf("/");
+        return intermediatePath.substring(secondSlashIndex+1);
+    }
+
 
     public static String generateNewPathForCopyObject(String path) {
 

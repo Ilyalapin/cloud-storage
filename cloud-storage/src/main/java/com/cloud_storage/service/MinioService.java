@@ -2,12 +2,10 @@ package com.cloud_storage.service;
 
 import com.cloud_storage.common.exception.*;
 import com.cloud_storage.common.util.FileSizeConverter;
+import com.cloud_storage.common.util.MapingUtil;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.common.util.ValidationUtil;
-import com.cloud_storage.dto.ObjectUploadDto;
-import com.cloud_storage.dto.ObjectDto;
-import com.cloud_storage.dto.ObjectReadDto;
-import com.cloud_storage.dto.RenameDto;
+import com.cloud_storage.dto.*;
 import io.minio.*;
 import io.minio.errors.ErrorResponseException;
 import io.minio.messages.Item;
@@ -18,12 +16,11 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -79,7 +76,7 @@ public class MinioService {
     }
 
 
-    public ObjectReadDto createFolder(String folderName, String path) throws MinioException {
+    public ObjectReadDto createFolder(String folderName, String path, ObjectReadDto rootFolder) throws MinioException {
         try {
             ValidationUtil.validate(folderName);
         } catch (RuntimeException e) {
@@ -87,6 +84,8 @@ public class MinioService {
         }
 
         try {
+            path = PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder);
+
             log.info("Creating folder with name: {}", folderName);
             minioClient.putObject(PutObjectArgs.builder()
                     .bucket(BUCKET_NAME)
@@ -106,13 +105,17 @@ public class MinioService {
     }
 
 
-    public List<ObjectReadDto> findByName(String searchName, String path) throws MinioException {
-        List<ObjectReadDto> allObjects = getObjects(path);
-        List<ObjectReadDto> foundObjects = new ArrayList<>();
+    public List<SearchDto> findByName(SearchDto searchDto, ObjectReadDto rootFolder) throws MinioException {
+        String searchName = searchDto.getName();
+
+        List<ObjectReadDto> allObjects = getObjects(rootFolder.getName());
+        List<SearchDto> foundObjects = new ArrayList<>();
         try {
             for (ObjectReadDto object : allObjects) {
                 if (object.getName().toLowerCase().contains(searchName.toLowerCase())) {
-                    foundObjects.add(object);
+                    SearchDto searchObject = MapingUtil.convertToSearchDto(object);
+                    searchObject.setSearchResult(true);
+                    foundObjects.add(searchObject);
                 }
                 if (object.isDir()) {
                     findChildObjects(searchName, object, foundObjects);
@@ -125,11 +128,13 @@ public class MinioService {
     }
 
 
-    private void findChildObjects(String searchName, ObjectReadDto parentObject, List<ObjectReadDto> foundObjects) throws MinioException {
+    private void findChildObjects(String searchName, ObjectReadDto parentObject, List<SearchDto> foundObjects) throws MinioException {
         List<ObjectReadDto> childObjects = getObjects(parentObject.getPath() + parentObject.getName() + "/");
         for (ObjectReadDto childObject : childObjects) {
             if (childObject.getName().toLowerCase().contains(searchName.toLowerCase())) {
-                foundObjects.add(childObject);
+                SearchDto foundChildObject = MapingUtil.convertToSearchDto(childObject);
+                foundChildObject.setSearchResult(true);
+                foundObjects.add(foundChildObject);
             }
             if (childObject.isDir()) {
                 findChildObjects(searchName, childObject, foundObjects);
@@ -283,7 +288,7 @@ public class MinioService {
     }
 
 
-    public void renameObject(RenameDto renameDto, ObjectReadDto rootFolder) throws MinioException {
+    public void renameObject(ObjectRenameDto renameDto, ObjectReadDto rootFolder) throws MinioException {
         try {
             ValidationUtil.validate(renameDto);
         } catch (RuntimeException e) {
@@ -292,7 +297,7 @@ public class MinioService {
         renameDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(renameDto.getPath(), rootFolder));
 
         if (renameDto.getIsDir().equals(String.valueOf(true))) {
-            copyFolder(renameDto, renameDto.getPath());
+            copyFolder(renameDto, renameDto.getPath(), rootFolder);
             deleteObject(renameDto.getPath() + renameDto.getOldName() + "/");
         } else {
             copyFile(renameDto, renameDto.getPath());
@@ -301,18 +306,18 @@ public class MinioService {
     }
 
 
-    private void copyFolder(RenameDto renameDto, String path) throws MinioException {
+    private void copyFolder(ObjectRenameDto renameDto, String path, ObjectReadDto rootFolder) throws MinioException {
         try {
             List<ObjectReadDto> objects = getObjects(renameDto.getPath() + renameDto.getOldName() + "/");
             log.warn("Objects found: {}", objects);
 
             if (!objects.iterator().hasNext()) {
-                createFolder(renameDto.getNewName(), path);
+                createFolder(renameDto.getNewName(), path, rootFolder);
             } else {
-                ObjectReadDto newFolder = createFolder(renameDto.getNewName(), path);
+                ObjectReadDto newFolder = createFolder(renameDto.getNewName(), path, rootFolder);
 
                 for (ObjectReadDto object : objects) {
-                    RenameDto childDto = new RenameDto(
+                    ObjectRenameDto childDto = new ObjectRenameDto(
                             object.getName(),
                             object.getName(),
                             object.getPath(),
@@ -320,8 +325,8 @@ public class MinioService {
                     );
 
                     if (object.isDir()) {
-                        ObjectReadDto folder = createFolder(object.getName(), newFolder.getPath());
-                        copyFolder(childDto, PrefixGenerationUtil.generateNewPathForCopyObject(folder.getPath()));
+                        ObjectReadDto folder = createFolder(object.getName(), newFolder.getPath(), rootFolder);
+                        copyFolder(childDto, PrefixGenerationUtil.generateNewPathForCopyObject(folder.getPath()), rootFolder);
                     } else {
                         copyFile(childDto, newFolder.getPath());
                     }
@@ -333,7 +338,7 @@ public class MinioService {
     }
 
 
-    private void copyFile(RenameDto renameDto, String path) throws MinioException {
+    private void copyFile(ObjectRenameDto renameDto, String path) throws MinioException {
         try {
             minioClient.copyObject(CopyObjectArgs.builder()
                     .bucket(BUCKET_NAME)
@@ -349,7 +354,8 @@ public class MinioService {
     }
 
 
-    public void uploadFile(ObjectUploadDto fileUploadDto) throws MinioException, IOException {
+    public void uploadFile(ObjectUploadDto fileUploadDto, ObjectReadDto rootFolder) throws MinioException, IOException {
+        fileUploadDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(fileUploadDto.getPath(), rootFolder));
         List<MultipartFile> files = fileUploadDto.getFiles();
         for (MultipartFile file : files) {
             putObject(
@@ -377,7 +383,9 @@ public class MinioService {
     }
 
 
-    public void uploadFolder(ObjectUploadDto objectUploadDto) {
+    public void uploadFolder(ObjectUploadDto objectUploadDto, ObjectReadDto rootFolder) {
+        objectUploadDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(objectUploadDto.getPath(), rootFolder));
+
         List<MultipartFile> files = objectUploadDto.getFiles();
         try {
             List<SnowballObject> objects = getSnowBallObjects(files, objectUploadDto.getPath());
@@ -386,8 +394,7 @@ public class MinioService {
                     .bucket(BUCKET_NAME)
                     .objects(objects)
                     .build());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new FolderOperationException("There is an error while uploading the folder, try again later");
         }
     }
@@ -410,30 +417,61 @@ public class MinioService {
         }
         return objects;
     }
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /*
-     * Метод getAndSave предназначен для загрузки объекта из хранилища MinIO и сохранения его на локальной файловой системе.
-     */
-    public void downloadFolder(String path, String objectName) throws MinioException {
 
-        List<ObjectReadDto> objects = getObjects(path + objectName + "/");
-        if (objects.isEmpty()) {
-            throw new NotFoundException("No files for downloading were found. This folder is empty.");
-        }
-        try {
-            DownloadObjectArgs args = DownloadObjectArgs.builder()
-                    .bucket(BUCKET_NAME)
-                    .object(path)
-                    .filename(objectName)
-                    .build();
-            minioClient.downloadObject(args);
+
+    public void downloadFolder(ObjectDto objectDto, OutputStream target, ObjectReadDto rootFolder) throws Exception {
+
+        objectDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(objectDto.getPath(), rootFolder));
+        List<ObjectReadDto> objects = getObjects(objectDto.getPath() + objectDto.getName() + "/");
+
+        try (ZipOutputStream zipOut = new ZipOutputStream(target)) {
+            for (ObjectReadDto object : objects) {
+                if (object.isDir()) {
+                    addDirectoryToZip(zipOut, object);
+                } else {
+                    addFileToZip(zipOut, object.getName(), object);
+                }
+            }
         } catch (Exception e) {
-            throw new MinioException("Error while fetching files in Minio", e);
+            throw new FileOperationException("There is an error while downloading the file, try again later");
         }
     }
 
 
-    public ByteArrayResource downloadFile(ObjectDto objectDto) {
+    private void addDirectoryToZip(ZipOutputStream zipOut, ObjectReadDto childObjectDto) throws Exception {
+        List<ObjectReadDto> objects = getObjects(childObjectDto.getPath() + childObjectDto.getName() + "/");
+
+        for (ObjectReadDto object : objects) {
+            if (object.isDir()) {
+                addDirectoryToZip(zipOut, object);
+            } else {
+                String path = PrefixGenerationUtil.removePrefixForZipDirectory(childObjectDto.getPath()) + childObjectDto.getName() + "/" + object.getName();
+                addFileToZip(zipOut, path, object);
+            }
+        }
+    }
+
+
+    private void addFileToZip(ZipOutputStream zipOut, String path, ObjectReadDto object) throws Exception {
+        zipOut.putNextEntry(new ZipEntry(path));
+
+        InputStream fileInputStream = minioClient.getObject(GetObjectArgs.builder()
+                .bucket(BUCKET_NAME)
+                .object(object.getPath() + object.getName())
+                .build());
+
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = fileInputStream.read(buffer)) >= 0) {
+            zipOut.write(buffer, 0, length);
+        }
+        zipOut.closeEntry();
+        fileInputStream.close();
+    }
+
+
+    public ByteArrayResource downloadFile(ObjectDto objectDto, ObjectReadDto rootFolder) {
+        objectDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(objectDto.getPath(), rootFolder));
         GetObjectArgs getObjectArgs = GetObjectArgs.builder()
                 .bucket(BUCKET_NAME)
                 .object(objectDto.getPath() + objectDto.getName())

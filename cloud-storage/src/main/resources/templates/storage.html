@@ -108,10 +108,10 @@
         </button>
     </div>
     <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-        <form action="/storage/search" method="get">
+        <form action="/storage/search" method="get" th:object="${searchDto}">
             <input class="search" placeholder="Search in storage"
-                   type="text" id="searchName"
-                   name="searchName" required
+                   type="text" id="name"
+                   name="name" required
                    title="Name location must contain only letters ">
             <input class="btn-search" type="submit" value="Search">
         </form>
@@ -162,6 +162,7 @@
                             <a th:href="@{/storage(path=${object.getPath()+object.getName()+'/'})}"
                                class="folder-name" th:text="${object.getName()}"></a>
                         </div>
+
                     </div>
 
                     <div class="col-md-4">
@@ -218,6 +219,5 @@
 
 <!-- Upload file modal -->
 <div th:replace="~{fragment/upload-file-modal :: uploadFileModal(objectUploadDto=${objectUploadDto})}"></div>
-
 </body>
 </html>
