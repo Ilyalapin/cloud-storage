@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="buttons(name,isDir,index)">
+    <div class="buttons">
+        <form th:if="${!isDir}" th:action="@{/storage/downloadFile}" th:method="get" th:object="${objectDto}">
+            <input type="hidden" name="path" th:value="${param.path}">
+            <input type="hidden" name="name" th:value="${object.getName()}">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                 fill="currentColor"
+                 class="bi bi-download" viewBox="0 0 16 16">
+                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"></path>
+                <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"></path>
+            </svg>
+            </button>
+        </form>
+
+        <form th:if="${isDir}" th:action="@{/storage/downloadFolder}" th:method="get" th:object="${objectDto}">
+            <input type="hidden" name="path" th:value="${param.path}">
+            <input type="hidden" name="name" th:value="${object.getName()}">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                     fill="currentColor"
+                     class="bi bi-download" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"></path>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"></path>
+                </svg>
+            </button>
+        </form>
+
+        <!--    Three dots with dropdown-->
+        <div class="dropdown ps-3">
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+                    data-bs-toggle="dropdown">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                     fill="currentColor"
+                     class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+                    <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                </svg>
+            </button>
+            <div class="dropdown-menu">
+                <div>
+                    <button
+                            type="button" class="dropdown-item " data-bs-toggle="modal"
+                            th:data-bs-target="'#renameModal_'+${index}">Rename
+                    </button>
+                </div>
+
+                <div>
+                    <form th:action="@{/storage/delete}" th:method="delete" th:object="${objectDeleteDto}">
+                        <input name="path" th:value="${object.getPath()}" type="hidden">
+                        <input type="hidden" name="objectName" th:value="${object.getName()}">
+                        <button type="submit" class="dropdown-item btn text-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

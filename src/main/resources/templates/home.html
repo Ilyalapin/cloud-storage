@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragment/head :: commonHead}"></th:block>
+</head>
+<body>
+<div class="header2">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div class='header-line' th:fragment="headerLine">
+        <div class="cloud-logo">
+            <img src="/image/cloud_logo.png">
+        </div>
+
+        <div class='label-text'>
+            <h2>Cloud storage</h2>
+        </div>
+
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                <span>Guest</span>
+            </button>
+            <ul class="dropdown-menu">
+                <li>
+                    <form th:action="@{/user/sign-in}" th:method="get">
+                        <button type="submit" class="dropdown-item">Sign In</button>
+                    </form>
+                </li>
+                <li>
+                    <form th:action="@{/user/sign-up}" th:method="get">
+                        <button type="submit" class="dropdown-item">Sign Up</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container-center-storage-guest">
+    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+        <form action="#" method="get">
+            <input class="search" placeholder="Search in storage">
+            <input class="btn-search" type="submit" value="Search">
+        </form>
+    </div>
+
+    <div class="container-center-home">
+
+        <div class="container-center-message">
+        <h1>
+            Application functionality is available only to authorized users.
+        </h1>
+        <h1>
+            Please, sign in your account or sign up.
+        </h1>
+        </div>
+
+    </div>
+    </div>
+</div>
+</body>
+</html>

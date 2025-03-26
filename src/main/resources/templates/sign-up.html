@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragment/head :: commonHead}"></th:block>
+</head>
+<body>
+<form th:action="@{/user}" th:method="post" th:object="${user}">
+    <div class="header">
+        <div class="container-center">
+            <div class="row">
+                <div class="col-md-4"></div>
+
+                <div class="col-md-4">
+                    <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+                        <label class="label-Sign">Sign up</label>
+
+                        <div th:replace="~{fragment/input-personal-data :: inputPersonalData}"></div>
+                        <div th:replace="~{fragment/error :: error}"></div>
+
+                        <input class="btn-sign" type="submit" value="Sign up">
+                    </div>
+                </div>
+                <div class="col-md-4"></div>
+            </div>
+        </div>
+    </div>
+</form>
+<script crossorigin="anonymous" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js">
+</script>
+</body>
+</html>

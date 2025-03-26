@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragment/head :: commonHead}"></th:block>
+    <title></title>
+</head>
+<body>
+<div class="header2">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <div class='header-line'>
+        <div class="cloud-logo">
+            <img src="/image/cloud_logo.png" alt="cloud-logo">
+        </div>
+
+        <div class='label-text'>
+            <h2>Cloud storage</h2>
+        </div>
+
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                <span th:text="${userInfo}">User info</span>
+            </button>
+            <ul class="dropdown-menu">
+                <li>
+                    <button type="button" class="dropdown-item" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop1">
+                        Sign Out
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="dropdown-item" data-bs-toggle="modal"
+                            data-bs-target="#staticBackdrop2">
+                        Delete
+                    </button>
+                </li>
+            </ul>
+            <!--                    Для Sign Out-->
+            <div class="modal fade" id="staticBackdrop1"
+                 data-bs-backdrop="static"
+                 data-bs-keyboard="false"
+                 tabindex="-1"
+                 aria-labelledby="staticBackdropLabel1"
+                 aria-hidden="true">
+
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="staticBackdropLabel1"></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to sign out?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close
+                            </button>
+                            <form th:action="@{/sign-out}" th:method="post">
+                                <button type="submit" class="btn btn-primary">Sign Out</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--                    Для Delete-->
+            <div class="modal fade" id="staticBackdrop2"
+                 data-bs-backdrop="static"
+                 data-bs-keyboard="false"
+                 tabindex="-1"
+                 aria-labelledby="staticBackdropLabel2"
+                 aria-hidden="true">
+
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="staticBackdropLabel2"></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete this account?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close
+                            </button>
+                            <form th:action="@{/user}" th:method="DELETE">
+                                <button type="submit" class="btn btn-primary">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container-center-storage">
+    <div class="btn-add-upload">
+
+        <button
+          type="button" class="new-folder" data-bs-toggle="modal" data-bs-target="#createFolderModal">New folder
+        </button>
+        <button
+          type="button" class="upload-folders" data-bs-toggle="modal" data-bs-target="#uploadFolderModal">Upload folder
+        </button>
+        <button
+          type="button" class="upload-files" data-bs-toggle="modal" data-bs-target="#uploadFileModal">Upload file
+        </button>
+    </div>
+    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+        <form action="/storage/search" method="get" th:object="${searchDto}">
+            <input class="search" placeholder="Search in storage"
+                   type="text" id="name"
+                   name="name" required
+                   title="Name location must contain only letters ">
+            <input class="btn-search" type="submit" value="Search">
+        </form>
+    </div>
+
+    <div class="container-center-user-page">
+        <h2 th:if="${objects.isEmpty()}" class="text-center mt-4">This folder is empty</h2>
+
+        <form action="/storage" method="get">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb fs-4">
+                    <li class="home-directory">
+                        <a th:href="@{/storage}" th:text="'Home/'"></a>
+                    </li>
+
+                    <li class="home-directory" th:if="${!path.isEmpty()}">
+                        <a th:href="@{/storage(path=${path})}" th:text="${breadCrumbs}"></a>
+                    </li>
+                </ol>
+            </nav>
+
+            <div class="row" th:unless="${objects.isEmpty()}">
+                <div class="col-md-5">
+                    <h4>Name</h4>
+                </div>
+
+                <div class="col-md-5">
+                    <h4>Size</h4>
+                </div>
+
+                <div class="col-md-5">
+                </div>
+            </div>
+
+            <div class="line" th:unless="${objects.isEmpty()}">
+            </div>
+        </form>
+
+        <div class="row66" th:each="object, iterStat : ${objects}">
+
+            <!--            Folder view-->
+            <div class="folder-view" th:if="${object.isDir()}">
+
+                <div class="row6">
+                    <div class="col-md-4">
+                        <div class="folder">
+                            <img src="/image/folder.png" alt="folder" class="folder-icon">
+                            <a th:href="@{/storage(path=${object.getPath()+object.getName()+'/'})}"
+                               class="folder-name" th:text="${object.getName()}"></a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="folder-size" th:text="${object.getSize()}"></label>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="folder-buttons">
+                            <div th:replace="~{fragment/object-control-buttons :: buttons(name=${object.getName()}, isDir=${object.isDir()}, index=${iterStat.index})}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="line">
+                </div>
+            </div>
+
+            <div class="file-view" th:if="${!object.isDir()}">
+                <!--            File view-->
+                <div class="row6">
+                    <div class="col-md-4">
+                        <div class="file">
+                            <img src="/image/file.png" alt="file" class="file-icon">
+                            <a class="file-name" th:text="${object.getName()}"></a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="file-size" th:text="${object.getSize()}"></label>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="file-buttons">
+                            <div th:replace="~{fragment/object-control-buttons :: buttons(name=${object.getName()}, isDir=${object.isDir()}, index=${iterStat.index})}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="line">
+                </div>
+            </div>
+            <!-- Rename modal -->
+            <div th:replace="~{fragment/button-rename :: renameModal( name=${object.getName()}, isDir=${object.isDir()}, index=${iterStat.index})}"></div>
+        </div>
+        <div th:replace="~{fragment/error :: error}"></div>
+    </div>
+</div>
+
+<!-- Create folder modal -->
+<div th:replace="~{fragment/create-folder-modal :: createFolderModal}"></div>
+
+<!-- Upload folder modal -->
+<div th:replace="~{fragment/upload-folder-modal :: uploadFolderModal(objectUploadDto=${objectUploadDto})}"></div>
+
+<!-- Upload file modal -->
+<div th:replace="~{fragment/upload-file-modal :: uploadFileModal(objectUploadDto=${objectUploadDto})}"></div>
+</body>
+</html>

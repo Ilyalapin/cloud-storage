@@ -1,0 +1,44 @@
+#spring.application.name: cloud-storage
+#
+#spring:
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/users_db
+#    username: postgres
+#    password: postgres62
+#    driver-class-name: org.postgresql.Driver
+#  jpa:
+#    properties.hibernate:
+#      show_sql: true
+#      format_sql: true
+#    open-in-view: false
+#  mvc:
+#    hiddenmethod:
+#      filter:
+#        enabled: true
+#
+#
+#minio:
+#  url: http://localhost:9001
+#  credentials:
+#    user: minioadmin62
+#    password: minioadmin62
+#  bucket:
+#    name: user-files
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#

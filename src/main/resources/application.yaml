@@ -1,0 +1,52 @@
+spring.application.name: cloud-storage
+
+spring:
+  datasource:
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties.hibernate:
+      show_sql: true
+      format_sql: true
+    open-in-view: false
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
+
+  thymeleaf:
+    cache: false
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      password: ${REDIS_PASSWORD}
+
+
+minio:
+  client:
+    url: http://localhost:9001
+    user: ${MINIO_ROOT_USER}
+    password: ${MINIO_ROOT_PASSWORD}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

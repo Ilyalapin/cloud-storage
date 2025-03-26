@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="renameModal(name,isDir,index)">
+    <div class="modal fade" th:id="'renameModal_'+${index}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">Rename folder</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <form th:action="@{/storage/rename}" th:method="patch" th:object="${renameDto}" class="form-floating" th:id="'renameForm_'+${index}">
+                            <input type="hidden" name="path" th:value="${param.path}">
+                            <input type="hidden" name="oldName" th:value="${name}">
+                            <input type="hidden" name="isDir" th:value="${isDir}">
+                            <div class="form-floating">
+                                <input class="form-control"
+                                       type="text"
+                                       name="newName" id="newName">
+                                <label for="newName">New name</label>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" th:form="'renameForm_'+${index}">Rename</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

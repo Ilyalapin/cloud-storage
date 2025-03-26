@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="error">
+    <div th:if="${error}" style="color: red;">
+        <span th:text="${error}"></span>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="inputPersonalData">
+    <input class="input-login" placeholder="Login"
+           type="text" id="username"
+           name="username"
+           pattern="^[0-9A-Za-z._%+-]+@[0-9A-Za-z.-]+.[A-Za-z]{2,}$" required
+           title="Invalid parameter: login must contain only english letters or numbers and contain from 3 to 20 characters">
+
+    <input class="input-password" placeholder="Password"
+           type="text" id="password"
+           name="password"
+           pattern="^[0-9A-Za-z()!:-]{3,20}$" required
+           title="Invalid parameter: login must contain only english letters or numbers and contain from 3 to 20 characters">
+</div>
+</body>
+</html>

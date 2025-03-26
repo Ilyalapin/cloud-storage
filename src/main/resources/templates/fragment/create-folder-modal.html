@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<div th:fragment="createFolderModal">
+    <div class="modal fade" id="createFolderModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">Create new folder</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <form th:method="POST" th:action="@{/storage}" th:object="${objectCreateDto}" class="form-floating"
+                              id="folderCreationForm">
+                            <input type="hidden" name="path" th:value="${param.path}">
+                            <div class="form-floating">
+                                    <input class="form-control"
+                                           type="text"
+                                           name="name" th:value="${name}" id="name">
+                                <label for="name">Folder name</label>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" form="folderCreationForm">Create</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
