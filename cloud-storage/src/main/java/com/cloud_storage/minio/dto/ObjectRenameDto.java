@@ -1,4 +1,4 @@
-package com.cloud_storage.dto;
+package com.cloud_storage.minio.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ObjectDto {
+public class ObjectRenameDto {
 
-    private String name;
+    private String oldName;
+
+    private String newName;
 
     private String path;
+
+    private String isDir;
 }

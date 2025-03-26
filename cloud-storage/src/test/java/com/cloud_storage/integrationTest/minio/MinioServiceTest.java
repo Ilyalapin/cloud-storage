@@ -1,10 +1,10 @@
 package com.cloud_storage.integrationTest.minio;
 
-import com.cloud_storage.dto.ObjectRenameDto;
-import com.cloud_storage.dto.ObjectUploadDto;
-import com.cloud_storage.dto.ObjectReadDto;
+import com.cloud_storage.minio.dto.ObjectRenameDto;
+import com.cloud_storage.minio.dto.ObjectUploadDto;
+import com.cloud_storage.minio.dto.ObjectReadDto;
 import com.cloud_storage.integrationTest.config.MinioServiceTestConfig;
-import com.cloud_storage.service.MinioService;
+import com.cloud_storage.minio.service.MinioService;
 import io.minio.MinioClient;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;

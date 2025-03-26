@@ -1,9 +1,9 @@
 package com.cloud_storage.common.util;
 
-import com.cloud_storage.dto.ObjectReadDto;
-import com.cloud_storage.dto.SearchDto;
-import com.cloud_storage.dto.UserCreateDto;
-import com.cloud_storage.dto.UserReadDto;
+import com.cloud_storage.minio.dto.ObjectReadDto;
+import com.cloud_storage.minio.dto.SearchDto;
+import com.cloud_storage.user.dto.UserCreateDto;
+import com.cloud_storage.user.dto.UserReadDto;
 import com.cloud_storage.entity.User;
 import org.modelmapper.ModelMapper;
 

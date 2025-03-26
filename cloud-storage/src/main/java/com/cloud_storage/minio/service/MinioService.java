@@ -1,11 +1,11 @@
-package com.cloud_storage.service;
+package com.cloud_storage.minio.service;
 
 import com.cloud_storage.common.exception.*;
 import com.cloud_storage.common.util.FileSizeConverter;
 import com.cloud_storage.common.util.MapingUtil;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
 import com.cloud_storage.common.util.ValidationUtil;
-import com.cloud_storage.dto.*;
+import com.cloud_storage.minio.dto.*;
 import io.minio.*;
 import io.minio.errors.ErrorResponseException;
 import io.minio.messages.Item;

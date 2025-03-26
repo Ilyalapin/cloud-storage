@@ -5,7 +5,10 @@ target/
 !**/src/test/**/target/
 .idea/
 ../.env
-
+.mvn
+.gitattributes
+mvnw.cmd
+mvnw
 
 ### STS ###
 .apt_generated
