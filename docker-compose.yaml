@@ -32,10 +32,3 @@ services:
     command: redis-server
     ports:
       - ${REDIS_PORTS}
-
-
-
-
-
-
-
