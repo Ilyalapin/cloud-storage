@@ -15,7 +15,7 @@ public class MapingUtil {
     }
 
 
-    public static UserReadDto convertToSearchDto(User user) {
+    public static UserReadDto convertToDto(User user) {
         return MODEL_MAPPER.map(user, UserReadDto.class);
     }
 

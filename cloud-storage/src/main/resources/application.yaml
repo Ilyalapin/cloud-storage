@@ -2,7 +2,7 @@ spring.application.name: cloud-storage
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/users_db
+    url: ${POSTGRES_URL}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -16,12 +16,21 @@ spring:
       filter:
         enabled: true
 
+  thymeleaf:
+    cache: false
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      password: ${REDIS_PASSWORD}
+
 
 minio:
-  url: http://localhost:9001
-  credentials:
-    user: minioadmin62
-    password: minioadmin62
+  client:
+    url: http://localhost:9001
+    user: ${MINIO_ROOT_USER}
+    password: ${MINIO_ROOT_PASSWORD}
+
 
 
 

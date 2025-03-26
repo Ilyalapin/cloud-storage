@@ -44,7 +44,7 @@ public class UserService {
         }
         try {
             User user = userRepository.save(MapingUtil.convertToEntity(userCreateDto));
-            return MapingUtil.convertToSearchDto(user);
+            return MapingUtil.convertToDto(user);
         }catch (RuntimeException e) {
             throw new UserAlreadyExistException("User with login " + userCreateDto.getUsername() + " already exists");
         }

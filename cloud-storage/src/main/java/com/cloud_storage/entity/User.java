@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,14 +15,14 @@ import lombok.Setter;
 @Getter
 @Entity
 @Table(name = "users", indexes = {@Index(name = "idx_username", columnList = "username")})
-public class User {
+public class User implements Serializable {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column(unique = true, nullable = false)
     private String username;
-
 
     @Column(nullable = false)
     private String password;

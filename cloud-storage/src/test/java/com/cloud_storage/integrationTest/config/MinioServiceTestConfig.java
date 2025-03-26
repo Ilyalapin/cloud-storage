@@ -2,10 +2,8 @@ package com.cloud_storage.integrationTest.config;
 
 import com.cloud_storage.service.MinioService;
 import io.minio.MinioClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.PropertySource;
 
 @TestConfiguration
 public class MinioServiceTestConfig {

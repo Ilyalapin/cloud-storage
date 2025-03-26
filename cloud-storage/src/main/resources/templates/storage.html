@@ -2,6 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragment/head :: commonHead}"></th:block>
+    <title></title>
 </head>
 <body>
 <div class="header2">
@@ -162,7 +163,6 @@
                             <a th:href="@{/storage(path=${object.getPath()+object.getName()+'/'})}"
                                class="folder-name" th:text="${object.getName()}"></a>
                         </div>
-
                     </div>
 
                     <div class="col-md-4">

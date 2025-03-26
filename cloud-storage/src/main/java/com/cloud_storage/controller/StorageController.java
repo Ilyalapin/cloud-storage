@@ -168,7 +168,6 @@ public class StorageController extends BaseController {
         }
         submitToModel(model, userPrincipal, rootFolder);
 
-
         return "storage";
     }
 
