@@ -1,8 +1,9 @@
-package com.cloud_storage.controller;
+package com.cloud_storage.common;
 
-import com.cloud_storage.common.UserPrincipal;
+import com.cloud_storage.minio.dto.*;
+import com.cloud_storage.user.service.UserPrincipal;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
-import com.cloud_storage.dto.*;
+import com.cloud_storage.dto.minioDto.*;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.ui.Model;
 

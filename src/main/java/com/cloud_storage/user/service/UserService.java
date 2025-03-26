@@ -1,15 +1,15 @@
-package com.cloud_storage.service;
+package com.cloud_storage.user.service;
 
 import com.cloud_storage.common.util.MapingUtil;
 import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.UserAlreadyExistException;
 import com.cloud_storage.common.exception.NotFoundException;
-import com.cloud_storage.dto.LoginDto;
-import com.cloud_storage.dto.UserCreateDto;
-import com.cloud_storage.dto.UserReadDto;
+import com.cloud_storage.user.dto.LoginDto;
+import com.cloud_storage.user.dto.UserCreateDto;
+import com.cloud_storage.user.dto.UserReadDto;
 import com.cloud_storage.entity.Role;
 import com.cloud_storage.entity.User;
-import com.cloud_storage.repository.UserRepository;
+import com.cloud_storage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;

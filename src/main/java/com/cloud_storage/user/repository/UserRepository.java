@@ -1,4 +1,4 @@
-package com.cloud_storage.repository;
+package com.cloud_storage.user.repository;
 
 import com.cloud_storage.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

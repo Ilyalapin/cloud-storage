@@ -2,12 +2,12 @@ package com.cloud_storage.integrationTest.jpa;
 
 import com.cloud_storage.common.exception.UserAlreadyExistException;
 import com.cloud_storage.common.exception.NotFoundException;
-import com.cloud_storage.dto.LoginDto;
-import com.cloud_storage.dto.UserReadDto;
+import com.cloud_storage.user.dto.LoginDto;
+import com.cloud_storage.user.dto.UserReadDto;
 import com.cloud_storage.entity.User;
 import com.cloud_storage.integrationTest.config.UserServiceTestConfig;
-import com.cloud_storage.repository.UserRepository;
-import com.cloud_storage.service.UserService;
+import com.cloud_storage.user.repository.UserRepository;
+import com.cloud_storage.user.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

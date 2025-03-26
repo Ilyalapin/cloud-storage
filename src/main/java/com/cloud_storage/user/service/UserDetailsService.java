@@ -1,8 +1,7 @@
-package com.cloud_storage.service;
+package com.cloud_storage.user.service;
 
-import com.cloud_storage.common.UserPrincipal;
 import com.cloud_storage.entity.User;
-import com.cloud_storage.repository.UserRepository;
+import com.cloud_storage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

@@ -1,6 +1,6 @@
 package com.cloud_storage.common.util;
 
-import com.cloud_storage.dto.ObjectReadDto;
+import com.cloud_storage.minio.dto.ObjectReadDto;
 
 public class PrefixGenerationUtil {
 

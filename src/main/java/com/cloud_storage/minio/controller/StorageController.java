@@ -1,11 +1,13 @@
-package com.cloud_storage.controller;
+package com.cloud_storage.minio.controller;
 
-import com.cloud_storage.common.UserPrincipal;
+import com.cloud_storage.common.BaseController;
+import com.cloud_storage.minio.dto.*;
+import com.cloud_storage.minio.service.MinioService;
+import com.cloud_storage.user.service.UserPrincipal;
 import com.cloud_storage.common.exception.InvalidParameterException;
 import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.common.util.PrefixGenerationUtil;
-import com.cloud_storage.dto.*;
-import com.cloud_storage.service.MinioService;
+import com.cloud_storage.dto.minioDto.*;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;

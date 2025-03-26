@@ -1,7 +1,7 @@
 package com.cloud_storage.common.util;
 
 import com.cloud_storage.common.exception.InvalidParameterException;
-import com.cloud_storage.dto.ObjectRenameDto;
+import com.cloud_storage.minio.dto.ObjectRenameDto;
 
 public class ValidationUtil {
     private static final String STARTS_WITH_LETTER_OR_DIGIT = "^[a-zA-Zа-яА-Я0-9]";

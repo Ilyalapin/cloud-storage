@@ -1,4 +1,4 @@
-package com.cloud_storage.common;
+package com.cloud_storage.user.service;
 
 import com.cloud_storage.entity.Role;
 import com.cloud_storage.entity.User;

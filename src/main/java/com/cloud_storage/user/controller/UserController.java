@@ -1,9 +1,9 @@
-package com.cloud_storage.controller;
+package com.cloud_storage.user.controller;
 
-import com.cloud_storage.common.UserPrincipal;
-import com.cloud_storage.dto.LoginDto;
-import com.cloud_storage.service.MinioService;
-import com.cloud_storage.service.UserService;
+import com.cloud_storage.user.service.UserPrincipal;
+import com.cloud_storage.user.dto.LoginDto;
+import com.cloud_storage.minio.service.MinioService;
+import com.cloud_storage.user.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;

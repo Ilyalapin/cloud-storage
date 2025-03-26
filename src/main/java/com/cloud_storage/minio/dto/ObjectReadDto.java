@@ -1,4 +1,4 @@
-package com.cloud_storage.dto;
+package com.cloud_storage.minio.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

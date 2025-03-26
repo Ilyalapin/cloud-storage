@@ -1,4 +1,4 @@
-package com.cloud_storage.common.config.minio;
+package com.cloud_storage.minio.config;
 
 import lombok.Getter;
 import lombok.Setter;

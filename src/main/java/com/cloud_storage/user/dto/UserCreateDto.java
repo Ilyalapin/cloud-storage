@@ -1,4 +1,4 @@
-package com.cloud_storage.dto;
+package com.cloud_storage.user.dto;
 
 import com.cloud_storage.entity.Role;
 import lombok.AllArgsConstructor;
