@@ -1,21 +1,19 @@
 package com.cloud_storage.integrationTest.minio;
 
+import com.cloud_storage.integrationTest.config.MinioServiceTestConfig;
+import com.cloud_storage.minio.dto.ObjectReadDto;
 import com.cloud_storage.minio.dto.ObjectRenameDto;
 import com.cloud_storage.minio.dto.ObjectUploadDto;
-import com.cloud_storage.minio.dto.ObjectReadDto;
-import com.cloud_storage.integrationTest.config.MinioServiceTestConfig;
 import com.cloud_storage.minio.service.MinioService;
-import io.minio.MinioClient;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.*;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.multipart.MultipartFile;
-import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -27,33 +25,10 @@ import static org.mockito.Mockito.when;
 @Testcontainers
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = MinioServiceTestConfig.class)
-public class MinioServiceTest {
+public class MinioServiceIntegrationTest {
 
     @Autowired
     private MinioService minioService;
-
-    @Autowired
-    MinioClient minioClient;
-    private MinIOContainer minio;
-
-
-    @BeforeEach
-    public void setUp() {
-        minio = new MinIOContainer(DockerImageName.parse("minio/minio:latest"))
-                .withEnv("MINIO_ROOT_USER", "minioadmin62")
-                .withEnv("MINIO_ROOT_PASSWORD", "minioadmin62")
-                .withCommand("server /data")
-                .withExposedPorts(9000);
-        minio.start();
-    }
-
-
-    @AfterEach
-    public void tearDown() {
-        if (minio != null) {
-            minio.stop();
-        }
-    }
 
 
     @Test

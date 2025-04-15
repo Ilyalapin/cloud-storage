@@ -1,7 +1,7 @@
 package com.cloud_storage.integrationTest.jpa;
 
 import com.cloud_storage.common.exception.UserAlreadyExistException;
-import com.cloud_storage.common.exception.NotFoundException;
+import com.cloud_storage.common.exception.UserNotFoundException;
 import com.cloud_storage.user.dto.LoginDto;
 import com.cloud_storage.user.dto.UserReadDto;
 import com.cloud_storage.entity.User;
@@ -60,7 +60,7 @@ public class UserServiceIntegrationTest {
     @Test
     void shouldThrowRuntimeExceptionWhenUserNotFound() {
         String nonExistUsername = "someName";
-        Assertions.assertThrows(NotFoundException.class, () -> userService.findByUsername(nonExistUsername));
+        Assertions.assertThrows(UserNotFoundException.class, () -> userService.findByUsername(nonExistUsername));
     }
 
     @Test
@@ -81,6 +81,6 @@ public class UserServiceIntegrationTest {
     void deleteUserSuccessfully() {
         UserReadDto user = userService.save(loginDto);
         userService.delete(username);
-        Assertions.assertThrows(NotFoundException.class, () -> userService.findByUsername(user.getUsername()));
+        Assertions.assertThrows(UserNotFoundException.class, () -> userService.findByUsername(user.getUsername()));
     }
 }

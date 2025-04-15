@@ -19,7 +19,8 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/image/**").permitAll()
-                        .requestMatchers("/storage/guest-page", "/user/sign-up", "/user").permitAll()
+                        .requestMatchers("/storage/guest-page", "/user").permitAll()
+                        .requestMatchers("/user/sign-up", "/user/sign-in").anonymous()
                         .anyRequest().authenticated())
                 .formLogin(login -> login
                         .loginPage("/user/sign-in")
@@ -29,8 +30,12 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl("/sign-out")
                         .logoutSuccessUrl("/storage/guest-page")
-                        .deleteCookies("JSESSIONID")
-                );
+                        .deleteCookies("JSESSIONID"))
+                .exceptionHandling(exceptions -> exceptions
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                    response.sendRedirect("/storage");
+                                })
+                        );
         return http.build();
     }
 

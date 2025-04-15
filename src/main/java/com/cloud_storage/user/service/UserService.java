@@ -1,9 +1,9 @@
 package com.cloud_storage.user.service;
 
 import com.cloud_storage.common.util.MapingUtil;
-import com.cloud_storage.common.exception.InvalidParameterException;
+import com.cloud_storage.common.exception.UserInvalidParameterException;
 import com.cloud_storage.common.exception.UserAlreadyExistException;
-import com.cloud_storage.common.exception.NotFoundException;
+import com.cloud_storage.common.exception.UserNotFoundException;
 import com.cloud_storage.user.dto.LoginDto;
 import com.cloud_storage.user.dto.UserCreateDto;
 import com.cloud_storage.user.dto.UserReadDto;
@@ -27,7 +27,7 @@ public class UserService {
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(
-                        () -> new NotFoundException("User with name: " + username + " not found")
+                        () -> new UserNotFoundException("User with name: " + username + " not found")
                 );
     }
 
@@ -40,7 +40,7 @@ public class UserService {
                 Role.USER
         );
         if (userCreateDto.getUsername() == null || userCreateDto.getPassword() == null) {
-            throw new InvalidParameterException("Invalid username or password");
+            throw new UserInvalidParameterException("Invalid username or password");
         }
         try {
             User user = userRepository.save(MapingUtil.convertToEntity(userCreateDto));

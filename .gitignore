@@ -7,6 +7,9 @@ target/
 ../.env
 .mvn
 .gitattributes
+mvnw.cmd
+mvnw
+docker-compose-ide.yaml
 
 ### STS ###
 .apt_generated

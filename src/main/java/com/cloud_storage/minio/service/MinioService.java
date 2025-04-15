@@ -16,7 +16,10 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -76,13 +79,8 @@ public class MinioService {
     }
 
 
-    public ObjectReadDto createFolder(String folderName, String path, ObjectReadDto rootFolder) throws MinioException {
-        try {
-            ValidationUtil.validate(folderName);
-        } catch (RuntimeException e) {
-            throw new InvalidParameterException(e.getMessage());
-        }
-
+    public ObjectReadDto createFolder(String folderName, String path, ObjectReadDto rootFolder) throws Exception {
+        ValidationUtil.validate(folderName);
         try {
             path = PrefixGenerationUtil.generateIfPathIsEmpty(path, rootFolder);
 
@@ -122,7 +120,7 @@ public class MinioService {
                 }
             }
         } catch (Exception e) {
-            throw new NotFoundException("Search by name: " + searchName + " did not give results.");
+            throw new FileNotFoundException("Search by name: " + searchName + " did not give results.");
         }
         return foundObjects;
     }
@@ -221,30 +219,28 @@ public class MinioService {
 
     public void deleteObject(String path) throws MinioException {
         Iterable<Result<Item>> objects = getAllByPath(path);
-        if (!objects.iterator().hasNext()) {
-            delete(path);
-        } else {
-            try {
-                for (Result<Item> result : objects) {
-                    Item item = result.get();
-
+        try {
+            if (!objects.iterator().hasNext()) {
+                delete(path);
+            } else {
+                for (Result<Item> itemResult : objects) {
+                    Item item = itemResult.get();
                     deleteAllByPath(item.objectName());
                     delete(item.objectName());
                 }
-            } catch (Exception e) {
-                throw new MinioException("Error while receiving the files", e);
+                delete(path);
             }
-            delete(path);
+        } catch (Exception e) {
+            throw new MinioException("Error when removing: ", e);
         }
     }
 
 
     private void deleteAllByPath(String path) throws MinioException {
-        try {
-            Iterable<Result<Item>> objects = getAllByPath(path);
-
-            for (Result<Item> result : objects) {
-                Item item = result.get();
+        Iterable<Result<Item>> objects = getAllByPath(path);
+        objects.forEach(itemResult -> {
+            try {
+                Item item = itemResult.get();
 
                 if (!item.isDir()) {
                     delete(item.objectName());
@@ -252,12 +248,12 @@ public class MinioService {
                 } else {
                     deleteAllByPath(item.objectName());
                 }
+            } catch (Exception e) {
+                throw new RuntimeException("Error while deleting folder: ", e);
             }
-            delete(path);
-            log.info("Deleted folder: {}", path);
-        } catch (Exception e) {
-            throw new MinioException("Error while deleting folder: ", e);
-        }
+        });
+        delete(path);
+        log.info("Deleted folder: {}", path);
     }
 
 
@@ -289,11 +285,7 @@ public class MinioService {
 
 
     public void renameObject(ObjectRenameDto renameDto, ObjectReadDto rootFolder) throws MinioException {
-        try {
-            ValidationUtil.validate(renameDto);
-        } catch (RuntimeException e) {
-            throw new InvalidParameterException(e.getMessage());
-        }
+        ValidationUtil.validate(renameDto);
         renameDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(renameDto.getPath(), rootFolder));
 
         if (renameDto.getIsDir().equals(String.valueOf(true))) {
@@ -354,14 +346,18 @@ public class MinioService {
     }
 
 
-    public void uploadFile(ObjectUploadDto fileUploadDto, ObjectReadDto rootFolder) throws MinioException, IOException {
-        fileUploadDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(fileUploadDto.getPath(), rootFolder));
-        List<MultipartFile> files = fileUploadDto.getFiles();
-        for (MultipartFile file : files) {
-            putObject(
-                    fileUploadDto.getPath() + file.getOriginalFilename(),
-                    file.getContentType(),
-                    file.getInputStream());
+    public void uploadFile(ObjectUploadDto fileUploadDto, ObjectReadDto rootFolder) throws FileOperationException {
+        try {
+            fileUploadDto.setPath(PrefixGenerationUtil.generateIfPathIsEmpty(fileUploadDto.getPath(), rootFolder));
+            List<MultipartFile> files = fileUploadDto.getFiles();
+            for (MultipartFile file : files) {
+                putObject(
+                        fileUploadDto.getPath() + file.getOriginalFilename(),
+                        file.getContentType(),
+                        file.getInputStream());
+            }
+        } catch (Exception e) {
+            throw new FileOperationException("Error while uploading file");
         }
     }
 
@@ -376,7 +372,7 @@ public class MinioService {
                             .contentType(contentType)
                             .build());
         } catch (RuntimeException e) {
-            throw new InvalidParameterException("Error uploading object. To upload files more than 100 Mb, make a paid subscription.");
+            throw new UserInvalidParameterException("Error uploading object. To upload files more than 100 Mb, make a paid subscription.");
         } catch (Exception e) {
             throw new MinioException("Error in placing an object in storage", e);
         }
@@ -433,7 +429,7 @@ public class MinioService {
                 }
             }
         } catch (Exception e) {
-            throw new FileOperationException("There is an error while downloading the file, try again later");
+            throw new FolderOperationException("There is an error while downloading the folder, try again later");
         }
     }
 
@@ -441,14 +437,19 @@ public class MinioService {
     private void addDirectoryToZip(ZipOutputStream zipOut, ObjectReadDto childObjectDto) throws Exception {
         List<ObjectReadDto> objects = getObjects(childObjectDto.getPath() + childObjectDto.getName() + "/");
 
-        for (ObjectReadDto object : objects) {
-            if (object.isDir()) {
-                addDirectoryToZip(zipOut, object);
-            } else {
-                String path = PrefixGenerationUtil.removePrefixForZipDirectory(childObjectDto.getPath()) + childObjectDto.getName() + "/" + object.getName();
-                addFileToZip(zipOut, path, object);
+        objects.forEach(object -> {
+            try {
+                if (object.isDir()) {
+                    addDirectoryToZip(zipOut, object);
+                } else {
+                    String path = PrefixGenerationUtil.
+                            removePrefixForZipDirectory(childObjectDto.getPath()) + childObjectDto.getName() + "/" + object.getName();
+                    addFileToZip(zipOut, path, object);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("There is an error while adding to zip", e);
             }
-        }
+        });
     }
 
 

@@ -1,8 +1,8 @@
 package com.cloud_storage.unitTest.service;
 
-import com.cloud_storage.common.exception.InvalidParameterException;
+import com.cloud_storage.common.exception.UserInvalidParameterException;
 import com.cloud_storage.common.exception.UserAlreadyExistException;
-import com.cloud_storage.common.exception.NotFoundException;
+import com.cloud_storage.common.exception.UserNotFoundException;
 import com.cloud_storage.user.dto.LoginDto;
 import com.cloud_storage.user.dto.UserReadDto;
 import com.cloud_storage.entity.Role;
@@ -48,14 +48,12 @@ public class UserServiceTest {
 
     @Test
     void shouldThrowUserNotFoundExceptionWhenSearchFails() {
-        Mockito.when(userRepository.findByUsername(username)).thenThrow(NotFoundException.class);
-        assertThrows(NotFoundException.class, () -> userService.findByUsername(username));
+        Mockito.when(userRepository.findByUsername(username)).thenThrow(UserNotFoundException.class);
+        assertThrows(UserNotFoundException.class, () -> userService.findByUsername(username));
     }
 
     @Test
     void saveSuccessfully() {
-
-
         Mockito.when(encoder.encode(Mockito.any())).thenReturn(password);
         Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
 
@@ -71,7 +69,7 @@ public class UserServiceTest {
     @Test
     void shouldThrowInvalidParameterExceptionWhenInvalidLogin() {
         LoginDto loginDto = new LoginDto(null, password);
-        Assertions.assertThrows(InvalidParameterException.class, () -> userService.save(loginDto));
+        Assertions.assertThrows(UserInvalidParameterException.class, () -> userService.save(loginDto));
     }
 
     @Test

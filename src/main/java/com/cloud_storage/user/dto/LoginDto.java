@@ -1,15 +1,11 @@
 package com.cloud_storage.user.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 public class LoginDto {
 
-    private String username;
+    String username;
 
-    private String password;
+    String password;
 }

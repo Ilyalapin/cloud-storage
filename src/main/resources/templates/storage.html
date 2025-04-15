@@ -128,7 +128,7 @@
                         <a th:href="@{/storage}" th:text="'Home/'"></a>
                     </li>
 
-                    <li class="home-directory" th:if="${!path.isEmpty()}">
+                    <li class="home-directory"  th:if="${!path.isEmpty()}" >
                         <a th:href="@{/storage(path=${path})}" th:text="${breadCrumbs}"></a>
                     </li>
                 </ol>

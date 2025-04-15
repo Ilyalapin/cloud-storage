@@ -43,6 +43,7 @@ public class PrefixGenerationUtil {
         return folderName.replaceAll("/$", "");
     }
 
+
     public static String removePrefixForZipDirectory(String fullPath) {
         if (fullPath == null || fullPath.isEmpty()) {
             return "folder";
@@ -52,7 +53,7 @@ public class PrefixGenerationUtil {
         String intermediatePath = fullPath.substring(firstSlashIndex + 1);
 
         int secondSlashIndex = intermediatePath.indexOf("/");
-        return intermediatePath.substring(secondSlashIndex+1);
+        return intermediatePath.substring(secondSlashIndex + 1);
     }
 
 
@@ -65,5 +66,15 @@ public class PrefixGenerationUtil {
         String basePath = path.substring(0, lastSlashIndex);
 
         return basePath + "/";
+    }
+
+    public static int getUserIdFromPath(String path, ObjectReadDto rootFolder) {
+        if (path == null || path.isEmpty()) {
+            path = rootFolder.getName();
+        }
+        int firstDashIndex = path.indexOf("-");
+        int secondDashIndex = path.indexOf("-", firstDashIndex + 1);
+
+        return Integer.parseInt(path.substring(firstDashIndex + 1, secondDashIndex));
     }
 }

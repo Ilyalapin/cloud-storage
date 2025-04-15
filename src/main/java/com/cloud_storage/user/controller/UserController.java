@@ -1,20 +1,19 @@
 package com.cloud_storage.user.controller;
 
-import com.cloud_storage.user.service.UserPrincipal;
-import com.cloud_storage.user.dto.LoginDto;
+import com.cloud_storage.common.exception.MinioException;
 import com.cloud_storage.minio.service.MinioService;
+import com.cloud_storage.user.dto.LoginDto;
+import com.cloud_storage.user.service.UserPrincipal;
 import com.cloud_storage.user.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
 @Controller
 @RequestMapping("/user")
 @RequiredArgsConstructor
@@ -39,37 +38,21 @@ public class UserController {
 
 
     @PostMapping
-    public String create(@ModelAttribute("user") LoginDto loginDto,
-                         HttpServletRequest httpServletRequest,
-                         Model model) throws ServletException {
-        try {
+    public String create(@ModelAttribute("user") LoginDto loginDto,HttpServletRequest httpServletRequest) throws ServletException {
             userService.save(loginDto);
-
             httpServletRequest.login(loginDto.getUsername(), loginDto.getPassword());
 
             return "redirect:/storage";
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "/sign-up";
-        }
     }
 
 
     @DeleteMapping
-    public String delete(@AuthenticationPrincipal UserPrincipal userPrincipal,
-                         HttpSession session,
-                         Model model) {
+    public String delete(@AuthenticationPrincipal UserPrincipal userPrincipal,HttpSession session) throws MinioException {
         String rootFolder = "user-" + userPrincipal.getId() + "-files/";
-        try {
             minioService.deleteObject(rootFolder);
-
             userService.delete(userPrincipal.getUsername());
             session.invalidate();
 
             return "redirect:/storage/guest-page";
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "redirect:/storage/guest-page";
-        }
     }
 }
